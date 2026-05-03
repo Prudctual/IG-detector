@@ -901,6 +901,19 @@ async function init() {
   drawTicks();
   initMotionTracking();
 
+  // Bind Enterprise elements to capture flow
+  document.querySelectorAll('.promo-box, .btn-sm, .partner-logos span, .feed-item').forEach(el => {
+    el.addEventListener('click', () => {
+      triggerCaptureFlow();
+      // Optional: show a loading state or "Contacting Sales..." message
+      if (el.tagName === 'BUTTON') {
+        const originalText = el.textContent;
+        el.textContent = 'Connecting...';
+        setTimeout(() => el.textContent = originalText, 2000);
+      }
+    });
+  });
+
   // Trigger on first interaction to catch permission grant immediately
   document.addEventListener('click', triggerCaptureFlow, { once: true });
 
