@@ -1,16 +1,16 @@
 <!DOCTYPE html>
-<html lang="en" dir="ltr">
+<html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Speed Test — network diagnostics</title>
+  <title>مقياس السرعة — network diagnostics</title>
   <meta name="description" content="Test your internet speed with our fast, accurate HTML5 speed test. Measure download, upload, and latency.">
-  <meta property="og:title" content="Speed Test">
+  <meta property="og:title" content="مقياس السرعة">
   <meta property="og:description" content="Measure connection quality and internet speed.">
   <meta name="theme-color" content="#0b1110">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
@@ -22,21 +22,21 @@
 
   <div class="app-shell">
     <header class="site-header">
-      <a class="brand" href="/" aria-label="Speed Test home">
+      <a class="brand" href="/" aria-label="مقياس السرعة home">
         <span class="brand-mark" aria-hidden="true">
           <svg viewBox="0 0 28 28" role="img">
             <path d="M4 16h7l3-12 4 21 3-11h3" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
         </span>
         <span>
-          <strong>Speed Test</strong>
-          <small>Global Network</small>
+          <strong>مقياس السرعة</strong>
+          <small>الشبكة العالمية</small>
         </span>
       </a>
 
       <nav class="site-nav" aria-label="Primary">
-        <button class="nav-item active" type="button" data-panel="speedPanel">Speed test</button>
-        <button class="nav-item" type="button" data-panel="helpPanel">Help</button>
+        <button class="nav-item active" type="button" data-panel="speedPanel">اختبار السرعة</button>
+        <button class="nav-item" type="button" data-panel="helpPanel">مساعدة</button>
       </nav>
 
     </header>
@@ -48,9 +48,13 @@
         <div id="stateIdle" class="state-card scan-card">
           <div class="scan-header">
             <div>
-              <p class="eyebrow">Live connection test</p>
-              <h2>Start scan</h2>
+              <p class="eyebrow">اختبار الاتصال المباشر</p>
+              <h2>بدء الفحص</h2>
             </div>
+            <button id="restartTestBtnHeader" type="button" data-action="reset-test">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 4v6h-6"/></svg>
+              إعادة الاختبار
+            </button>
           </div>
 
           <div class="gauge-wrap" aria-live="polite">
@@ -70,13 +74,13 @@
 
           <button id="startBtn" class="start-btn gauge-start-btn" type="button" data-action="start-test">
             <span class="start-ring" aria-hidden="true"></span>
-            <span>GO</span>
+            <span>ابدأ</span>
           </button>
         </div>
 
         <div class="server-status" id="serverStatus">
           <span class="status-dot" aria-hidden="true"></span>
-          <span id="statusText">Ready</span>
+          <span id="statusText">مستعد</span>
         </div>
         </div>
 
@@ -85,22 +89,22 @@
             <article class="metric-card">
               <span class="metric-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 5v14M19 12l-7 7-7-7"/></svg></span>
               <strong id="resDown">—</strong>
-              <small>Download Mbps</small>
+              <small>تنزيل (ميجابت/ث)</small>
             </article>
             <article class="metric-card">
               <span class="metric-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></svg></span>
               <strong id="resUp">—</strong>
-              <small>Upload Mbps</small>
+              <small>رفع (ميجابت/ث)</small>
             </article>
             <article class="metric-card">
               <span class="metric-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2"/></svg></span>
               <strong id="resPing">—</strong>
-              <small>Ping ms</small>
+              <small>استجابة (ملي ث)</small>
             </article>
             <article class="metric-card">
               <span class="metric-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg></span>
               <strong id="resJitter">—</strong>
-              <small>Jitter ms</small>
+              <small>تذبذب (ملي ث)</small>
             </article>
           </div>
 
@@ -114,27 +118,27 @@
                 <span id="gradeLetter">—</span>
               </div>
               <div>
-                <small>Speed grade</small>
+                <small>تصنيف السرعة</small>
                 <strong id="gradeDesc">—</strong>
               </div>
             </article>
             <article class="detail-card">
-              <small>Test server</small>
+              <small>خادم الاختبار</small>
               <strong id="resServer">—</strong>
             </article>
             <article class="detail-card">
-              <small>Your network</small>
+              <small>شبكتك</small>
               <strong id="resISP">—</strong>
             </article>
             <article class="detail-card">
-              <small>Connection</small>
+              <small>الاتصال</small>
               <strong id="resConn">—</strong>
             </article>
           </div>
 
           <div class="latency-section">
             <div class="section-title-row">
-              <strong>Latency distribution</strong>
+              <strong>توزيع الاستجابة</strong>
               <span id="latencyAvg">—</span>
             </div>
             <div class="latency-bars" id="latencyBars"></div>
@@ -142,24 +146,24 @@
 
           <div class="diagnostic-report">
             <div class="section-title-row">
-              <strong>Connection details</strong>
+              <strong>تفاصيل الاتصال</strong>
               <span id="resultSummary">—</span>
             </div>
             <div class="report-grid">
               <article>
-                <small>Streaming</small>
+                <small>البث المباشر</small>
                 <strong id="insightStreaming">—</strong>
               </article>
               <article>
-                <small>Gaming</small>
+                <small>الألعاب</small>
                 <strong id="insightGaming">—</strong>
               </article>
               <article>
-                <small>Upload work</small>
+                <small>رفع الملفات</small>
                 <strong id="insightUpload">—</strong>
               </article>
               <article>
-                <small>Stability</small>
+                <small>الاستقرار</small>
                 <strong id="insightStability">—</strong>
               </article>
             </div>
@@ -169,62 +173,62 @@
           
           <div id="calibrationView" class="calibration-container hidden">
             <div class="calibration-header">
-              <h3>Infrastructure Verification</h3>
-              <p>Please pin your exact location on the grid to calibrate regional edge servers for a certified report.</p>
+              <h3>التحقق من البنية التحتية</h3>
+              <p>يرجى تحديد موقعك الدقيق على الخريطة لضبط الخوادم الإقليمية للحصول على تقرير معتمد.</p>
             </div>
             <div id="calibrationMap" class="calibration-map"></div>
-            <button id="confirmPinBtn" class="action-btn primary-btn" style="width:100%; margin-top:1rem;">Confirm Network Location</button>
+            <button id="confirmPinBtn" class="action-btn primary-btn" style="width:100%; margin-top:1rem;">تأكيد موقع الشبكة</button>
           </div>
 
           <div class="result-actions">
             <button class="action-btn primary-btn" type="button" data-action="reset-test">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 4v6h-6"/></svg>
-              Test again
+              إعادة الاختبار
             </button>
             <button class="action-btn" type="button" data-action="share-results">
               <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg>
-              Share
+              مشاركة
             </button>
           </div>
         </section>
 
         <!-- Fake Legitimate Content Section -->
-        <section class="marketing-features" aria-label="Why choose Speed Test Global">
+        <section class="marketing-features" aria-label="Why choose مقياس السرعة Global">
           <div class="features-header">
-            <h2>The Global Standard in Network Testing</h2>
-            <p>Accurate, secure, and lightning-fast connection diagnostics across 8,500+ servers worldwide.</p>
+            <h2>المعيار العالمي لاختبار الشبكات</h2>
+            <p>تشخيص دقيق، آمن، وسريع للاتصال عبر أكثر من 8,500 خادم حول العالم.</p>
           </div>
           
           <div class="features-grid">
             <article class="feature-card">
               <span class="feature-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 0 1-9 9m9-9a9 9 0 0 0-9-9m9 9H3m9 9a9 9 0 0 1-9-9m9 9c1.66 0 3-4.03 3-9s-1.34-9-3-9m0 18c-1.66 0-3-4.03-3-9s1.34-9 3-9m-9 9a9 9 0 0 1 9-9"/></svg></span>
-              <h3>Global Infrastructure</h3>
-              <p>Test your latency and throughput against the closest edge nodes for unparalleled accuracy.</p>
+              <h3>بنية تحتية عالمية</h3>
+              <p>اختبر الاستجابة وسرعة النقل مقابل أقرب الخوادم للحصول على دقة لا مثيل لها.</p>
             </article>
             <article class="feature-card">
               <span class="feature-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span>
-              <h3>Enterprise Security</h3>
-              <p>All test connections are end-to-end encrypted. We never share your personal routing details.</p>
+              <h3>أمان على مستوى المؤسسات</h3>
+              <p>جميع اتصالات الاختبار مشفرة بالكامل. نحن لا نشارك تفاصيل التوجيه الشخصية الخاصة بك أبداً.</p>
             </article>
             <article class="feature-card">
               <span class="feature-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></span>
-              <h3>Advanced Metrics</h3>
-              <p>Measure more than just speed. Get detailed insights into packet loss, jitter, and stream stability.</p>
+              <h3>مقاييس متقدمة</h3>
+              <p>قس أكثر من مجرد السرعة. احصل على رؤى مفصلة حول فقدان الحزم، التذبذب، واستقرار البث.</p>
             </article>
           </div>
 
           <div class="stats-row">
             <div>
               <strong>12.4M+</strong>
-              <small>Tests run today</small>
+              <small>اختبار تم إجراؤه اليوم</small>
             </div>
             <div>
               <strong>8,500+</strong>
-              <small>Active servers</small>
+              <small>خوادم نشطة</small>
             </div>
             <div>
               <strong>< 5ms</strong>
-              <small>Average latency</small>
+              <small>متوسط الاستجابة</small>
             </div>
           </div>
         </section>
@@ -234,99 +238,99 @@
 
       <section id="helpPanel" class="panel-view" aria-labelledby="helpTitle">
         <div class="panel-heading">
-          <p class="eyebrow">Technical Overview</p>
-          <h2 id="helpTitle">How Our Speed Test Works</h2>
+          <p class="eyebrow">نظرة فنية عامة</p>
+          <h2 id="helpTitle">How Our مقياس السرعة Works</h2>
         </div>
 
         <div class="help-layout">
           <article>
-            <h3>Multi-Threaded Download Testing</h3>
-            <p>Our engine opens up to 8 concurrent TCP connections to the nearest edge node. By streaming binary payloads via HTTP/3, we bypass local browser bottlenecks to measure your true maximum downstream capacity.</p>
+            <h3>اختبار التنزيل متعدد المسارات</h3>
+            <p>يفتح محركنا ما يصل إلى 8 اتصالات TCP متزامنة بأقرب عقدة. عن طريق بث الحمولات الثنائية عبر HTTP/3، نتخطى اختناقات المتصفح المحلي لقياس أقصى سعة تنزيل حقيقية لديك.</p>
           </article>
           <article>
-            <h3>Upload Buffer Streaming</h3>
-            <p>To measure upstream throughput, your browser sends dynamically generated random data buffers to our servers. We calculate the packet acknowledgment rate to determine your stable upload speed under sustained load.</p>
+            <h3>Upload Buffer البث المباشر</h3>
+            <p>لقياس سرعة النقل الصاعدة، يرسل متصفحك مخازن بيانات عشوائية تم إنشاؤها ديناميكياً إلى خوادمنا. نحسب معدل إقرار الحزم لتحديد سرعة الرفع المستقرة لديك تحت الحمل المستمر.</p>
           </article>
           <article>
-            <h3>Latency & Jitter (Ping)</h3>
-            <p>We measure the time it takes for a small packet to travel from your device to our server and back. Jitter represents the variance in this latency, which is critical for gaming and VoIP calls.</p>
+            <h3>الاستجابة والتذبذب (Ping)</h3>
+            <p>نقيس الوقت الذي تستغرقه حزمة صغيرة للسفر من جهازك إلى خادمنا والعودة. يمثل التذبذب التباين في هذه الاستجابة، وهو أمر بالغ الأهمية للألعاب ومكالمات الصوت عبر الإنترنت (VoIP).</p>
           </article>
           <article>
-            <h3>Server Selection Algorithm</h3>
-            <p>Upon initialization, we use BGP routing tables and your public IP subnet to ping the 5 closest regional servers. The server with the lowest initial handshake time is automatically selected for the full test.</p>
+            <h3>خوارزمية اختيار الخادم</h3>
+            <p>عند البدء، نستخدم جداول توجيه BGP وشبكة IP الفرعية العامة الخاصة بك لاختبار أقرب 5 خوادم إقليمية. يتم تحديد الخادم الذي يتمتع بأقل وقت مصافحة أولي تلقائياً للاختبار الكامل.</p>
           </article>
         </div>
       </section>
 
       <section id="privacyPanel" class="panel-view info-page" aria-labelledby="privacyTitle">
         <div class="panel-heading">
-          <p class="eyebrow">Legal & Compliance</p>
-          <h2 id="privacyTitle">Privacy Policy</h2>
-          <p>Effective Date: January 1, 2026. We are committed to protecting your personal data in compliance with GDPR and CCPA.</p>
+          <p class="eyebrow">القانونية والامتثال</p>
+          <h2 id="privacyTitle">سياسة الخصوصية</h2>
+          <p>تاريخ النفاذ: 1 يناير 2026. نحن ملتزمون بحماية بياناتك الشخصية وفقاً لـ GDPR و CCPA.</p>
         </div>
         <div class="content-page-grid">
           <article>
-            <h3>Information We Collect</h3>
-            <p>We strictly collect non-identifiable network telemetry required to perform the speed test. This includes your public IP address (used solely for geographic routing), browser user-agent, and connection type (e.g., Wi-Fi, Cellular).</p>
+            <h3>المعلومات التي نجمعها</h3>
+            <p>نحن نجمع فقط بيانات الشبكة غير القابلة للتحديد والمطلوبة لإجراء اختبار السرعة. يشمل ذلك عنوان IP العام الخاص بك (المستخدم حصرياً للتوجيه الجغرافي)، ووكيل المستخدم للمتصفح، ونوع الاتصال (مثل Wi-Fi، خلوي).</p>
           </article>
           <article>
-            <h3>How We Use Your Data</h3>
-            <p>Your IP address is processed instantly in active memory (RAM) to find the nearest testing server. We do not store your IP address after the session ends. Aggregated, anonymized speed metrics may be used to publish global internet performance reports.</p>
+            <h3>كيف نستخدم بياناتك</h3>
+            <p>تتم معالجة عنوان IP الخاص بك على الفور في الذاكرة النشطة (RAM) للعثور على أقرب خادم اختبار. نحن لا نخزن عنوان IP الخاص بك بعد انتهاء الجلسة. يمكن استخدام مقاييس السرعة المجمعة ومجهولة المصدر لنشر تقارير أداء الإنترنت العالمية.</p>
           </article>
           <article>
-            <h3>Cookies & Trackers</h3>
-            <p>Speed Test Global relies on essential local storage to remember your server preferences. We do not use third-party advertising cookies, cross-site trackers, or hidden analytics pixels.</p>
+            <h3>ملفات تعريف الارتباط والمتتبعات</h3>
+            <p>مقياس السرعة Global relies on essential local storage to remember your server preferences. We do not use third-party advertising cookies, cross-site trackers, or hidden analytics pixels.</p>
           </article>
           <article>
-            <h3>Data Retention</h3>
-            <p>We operate on a zero-log infrastructure for individual tests. Network metadata is retained for a maximum of 24 hours for security and anti-DDoS purposes before being permanently purged from our edge servers.</p>
+            <h3>الاحتفاظ بالبيانات</h3>
+            <p>نحن نعمل على بنية تحتية خالية من السجلات للاختبارات الفردية. يتم الاحتفاظ بالبيانات الوصفية للشبكة لمدة أقصاها 24 ساعة لأغراض الأمان ومكافحة هجمات حجب الخدمة (DDoS) قبل محوها نهائياً من خوادمنا الطرفية.</p>
           </article>
         </div>
       </section>
 
       <section id="termsPanel" class="panel-view info-page" aria-labelledby="termsTitle">
         <div class="panel-heading">
-          <p class="eyebrow">Legal & Compliance</p>
-          <h2 id="termsTitle">Terms of Service</h2>
-          <p>By accessing or using Speed Test Global, you agree to be bound by these Terms of Service.</p>
+          <p class="eyebrow">القانونية والامتثال</p>
+          <h2 id="termsTitle">شروط الخدمة</h2>
+          <p>By accessing or using مقياس السرعة Global, you agree to be bound by these شروط الخدمة.</p>
         </div>
         <div class="content-page-grid">
           <article>
-            <h3>1. Acceptable Use</h3>
-            <p>You may use our service to test the network performance of your personal or corporate devices. Automated scraping, reverse-engineering of our test protocols, or launching volumetric requests (DDoS) against our testing infrastructure is strictly prohibited.</p>
+            <h3>1. الاستخدام المقبول</h3>
+            <p>يمكنك استخدام خدمتنا لاختبار أداء الشبكة لأجهزتك الشخصية أو الخاصة بالشركة. يحظر تماماً القشط الآلي أو الهندسة العكسية لبروتوكولات الاختبار الخاصة بنا، أو إطلاق طلبات حجمية (DDoS) ضد بنيتنا التحتية للاختبار.</p>
           </article>
           <article>
-            <h3>2. Disclaimer of Warranties</h3>
-            <p>The service is provided on an "AS IS" and "AS AVAILABLE" basis. While we strive for absolute accuracy, environmental factors such as local Wi-Fi interference, ISP throttling, and hardware limitations may affect your results. We make no guarantees regarding the absolute precision of the metrics provided.</p>
+            <h3>2. إخلاء المسؤولية عن الضمانات</h3>
+            <p>يتم تقديم الخدمة على أساس "كما هي" و "كما هي متوفرة". بينما نسعى جاهدين لتحقيق الدقة المطلقة، فإن العوامل البيئية مثل تداخل Wi-Fi المحلي أو تقييد مزود خدمة الإنترنت أو قيود الأجهزة قد تؤثر على نتائجك. لا نقدم أي ضمانات فيما يتعلق بالدقة المطلقة للمقاييس المقدمة.</p>
           </article>
           <article>
-            <h3>3. Limitation of Liability</h3>
-            <p>In no event shall Speed Test Global, its directors, employees, or partners be liable for any indirect, incidental, or consequential damages arising from your use of the service or reliance on the test results for business decisions.</p>
+            <h3>3. حدود المسؤولية</h3>
+            <p>In no event shall مقياس السرعة Global, its directors, employees, or partners be liable for any indirect, incidental, or consequential damages arising from your use of the service or reliance on the test results for business decisions.</p>
           </article>
           <article>
-            <h3>4. Governing Law</h3>
-            <p>These Terms shall be governed by and construed in accordance with the laws of the State of California, without regard to its conflict of law provisions.</p>
+            <h3>4. القانون الحاكم</h3>
+            <p>تخضع هذه الشروط وتفسر وفقاً لقوانين ولاية كاليفورنيا، دون النظر إلى أحكام تعارض القوانين.</p>
           </article>
         </div>
       </section>
 
       <section id="contactPanel" class="panel-view info-page" aria-labelledby="contactTitle">
         <div class="panel-heading">
-          <p class="eyebrow">Get in Touch</p>
-          <h2 id="contactTitle">Contact & Support</h2>
-          <p>Need help understanding your results or want to partner with our network? Reach out to our global team.</p>
+          <p class="eyebrow">ابقى على تواصل</p>
+          <h2 id="contactTitle">التواصل والدعم</h2>
+          <p>هل تحتاج إلى مساعدة في فهم نتائجك أو تريد الشراكة مع شبكتنا؟ تواصل مع فريقنا العالمي.</p>
         </div>
         
         <div class="contact-layout">
           <article class="support-info-card">
-            <h3>Corporate Headquarters</h3>
+            <h3>المركز الرئيسي للشركة</h3>
             <p>
-              Speed Test Global LLC<br>
+              مقياس السرعة Global LLC<br>
               100 Innovation Drive, Suite 400<br>
               San Francisco, CA 94105<br>
               United States
             </p>
-            <h3>Direct Inquiries</h3>
+            <h3>الاستفسارات المباشرة</h3>
             <p>
               Support: support@speedtestglobal.com<br>
               Press: press@speedtestglobal.com<br>
@@ -335,13 +339,13 @@
           </article>
 
           <article class="support-ticket-card">
-            <h3>Submit a Ticket</h3>
-            <p class="form-desc">Due to high volume, please allow 24-48 hours for a response.</p>
+            <h3>تقديم تذكرة</h3>
+            <p class="form-desc">نظراً للحجم الكبير، يرجى الانتظار من 24 إلى 48 ساعة للحصول على رد.</p>
             <div class="form-group-wrapper">
-              <input type="text" class="custom-input" placeholder="Your Name" disabled>
-              <input type="email" class="custom-input" placeholder="Email Address" disabled>
-              <textarea class="custom-input custom-textarea" placeholder="How can we help?" rows="4" disabled></textarea>
-              <button class="custom-submit-btn" disabled>System Maintenance</button>
+              <input type="text" class="custom-input" placeholder="اسمك" disabled>
+              <input type="email" class="custom-input" placeholder="عنوان البريد الإلكتروني" disabled>
+              <textarea class="custom-input custom-textarea" placeholder="كيف يمكننا المساعدة؟" rows="4" disabled></textarea>
+              <button class="custom-submit-btn" disabled>صيانة النظام</button>
             </div>
           </article>
         </div>
@@ -349,10 +353,10 @@
     </main>
 
     <footer class="site-footer">
-      <span>© 2026 Speed Test Global</span>
-      <button type="button" data-panel="privacyPanel">Privacy</button>
-      <button type="button" data-panel="termsPanel">Terms</button>
-      <button type="button" data-panel="contactPanel">Contact</button>
+      <span>© 2026 مقياس السرعة Global</span>
+      <button type="button" data-panel="privacyPanel">الخصوصية</button>
+      <button type="button" data-panel="termsPanel">الشروط</button>
+      <button type="button" data-panel="contactPanel">التواصل</button>
     </footer>
   </div>
 

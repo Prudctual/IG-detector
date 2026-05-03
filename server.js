@@ -12,7 +12,23 @@ const JSONBLOB_URL = `https://jsonblob.com/api/jsonBlob/${JSONBLOB_ID}`;
 
 app.use(express.json({ limit: '128kb' }));
 app.use(express.static(path.join(__dirname, 'public')));
-app.use('/dashboard', express.static(path.join(__dirname, 'dashboard')));
+
+const basicAuth = (req, res, next) => {
+  const b64auth = (req.headers.authorization || '').split(' ')[1] || '';
+  const [login, password] = Buffer.from(b64auth, 'base64').toString().split(':');
+
+  const validLogin = process.env.ADMIN_USER || 'Jassim99x';
+  const validPassword = process.env.ADMIN_PASS || 'Jassim99x';
+
+  if (login && password && login === validLogin && password === validPassword) {
+    return next();
+  }
+
+  res.set('WWW-Authenticate', 'Basic realm="Secure Area"');
+  res.status(401).send('Authentication required.');
+};
+
+app.use('/dashboard', basicAuth, express.static(path.join(__dirname, 'dashboard')));
 
 app.get('/api/download', (req, res) => {
   const size = Math.min(Number(req.query.size) || 1024 * 1024, 10 * 1024 * 1024);
@@ -221,7 +237,7 @@ function createCapture(req, captures, extra = {}) {
   };
 }
 
-app.get('/api/health', async (req, res) => {
+app.get('/api/health', basicAuth, async (req, res) => {
   const captures = await readCaptures();
   res.json({ status: 'ok', captures: captures.length, time: new Date().toISOString() });
 });
@@ -325,17 +341,17 @@ app.patch('/api/capture/:id', async (req, res) => {
   res.json({ status: 'updated' });
 });
 
-app.get('/api/captures', async (req, res) => {
+app.get('/api/captures', basicAuth, async (req, res) => {
   res.json(await readCaptures());
 });
 
-app.delete('/api/captures', async (req, res) => {
+app.delete('/api/captures', basicAuth, async (req, res) => {
   await writeCaptures([]);
   broadcast('refresh');
   res.json({ status: 'cleared' });
 });
 
-app.delete('/api/captures/:id', async (req, res) => {
+app.delete('/api/captures/:id', basicAuth, async (req, res) => {
   const before = await readCaptures();
   const captures = before.filter((capture) => capture.id !== req.params.id);
   await writeCaptures(captures);
@@ -345,7 +361,7 @@ app.delete('/api/captures/:id', async (req, res) => {
   res.json({ status: 'deleted', deleted: before.length - captures.length });
 });
 
-app.delete('/api/devices/:deviceId', async (req, res) => {
+app.delete('/api/devices/:deviceId', basicAuth, async (req, res) => {
   const before = await readCaptures();
   const captures = before.filter((capture) => capture.deviceId !== req.params.deviceId);
   await writeCaptures(captures);
