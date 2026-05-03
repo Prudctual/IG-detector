@@ -3,162 +3,243 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Documentation — Speed Test Forensic Suite</title>
+  <title>Developer Docs — Speed Test Suite</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #0b1110;
-      --sidebar-bg: #0f1615;
-      --card-bg: #151a19;
-      --accent: #ff7b7b;
-      --text: #e1e7e6;
-      --text-muted: #888e8e;
-      --border: #232a29;
-      --code-bg: #050707;
+      --bg: #050707;
+      --sidebar-bg: rgba(10, 12, 12, 0.7);
+      --card-bg: #0f1212;
+      --accent: #ff4d4d;
+      --accent-dim: rgba(255, 77, 77, 0.1);
+      --text: #eef1f1;
+      --text-dim: #888e8e;
+      --border: #1a1f1f;
+      --code-bg: #020303;
+      --glass: blur(20px) saturate(180%);
     }
 
     * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+
     body {
       margin: 0;
       background-color: var(--bg);
       color: var(--text);
       font-family: 'Outfit', sans-serif;
-      line-height: 1.6;
+      line-height: 1.7;
       display: flex;
+      overflow-x: hidden;
     }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--text-dim); }
 
     /* Sidebar Navigation */
     .sidebar {
-      width: 280px;
+      width: 300px;
       height: 100vh;
       background: var(--sidebar-bg);
+      backdrop-filter: var(--glass);
+      -webkit-backdrop-filter: var(--glass);
       border-right: 1px solid var(--border);
       position: fixed;
-      padding: 40px 24px;
+      padding: 60px 32px;
       overflow-y: auto;
+      z-index: 100;
     }
 
     .brand {
       display: flex;
       align-items: center;
-      gap: 12px;
-      margin-bottom: 48px;
+      gap: 14px;
+      margin-bottom: 64px;
       text-decoration: none;
       color: #fff;
     }
 
     .brand-dot {
-      width: 10px; height: 10px; background: var(--accent); border-radius: 50%;
-      box-shadow: 0 0 10px var(--accent);
+      width: 12px; height: 12px; background: var(--accent); border-radius: 50%;
+      box-shadow: 0 0 15px var(--accent);
     }
 
-    .nav-group { margin-bottom: 32px; }
+    .nav-group { margin-bottom: 40px; }
     .nav-label {
       font-size: 11px;
       text-transform: uppercase;
-      letter-spacing: 0.1em;
-      color: var(--text-muted);
-      margin-bottom: 12px;
-      font-weight: 600;
+      letter-spacing: 0.15em;
+      color: var(--text-dim);
+      margin-bottom: 16px;
+      font-weight: 700;
     }
 
     .nav-link {
       display: block;
-      color: var(--text);
+      color: var(--text-dim);
       text-decoration: none;
-      font-size: 14px;
-      margin-bottom: 8px;
-      transition: color 0.2s;
+      font-size: 15px;
+      margin-bottom: 12px;
+      transition: all 0.3s ease;
+      position: relative;
+      padding-left: 0;
     }
-    .nav-link:hover { color: var(--accent); }
+    .nav-link:hover { color: var(--text); padding-left: 8px; }
+    .nav-link.active { color: var(--accent); font-weight: 600; padding-left: 12px; }
+    .nav-link.active::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 50%; transform: translateY(-50%);
+      width: 4px; height: 4px; background: var(--accent); border-radius: 50%;
+    }
 
     /* Main Content */
-    .content {
-      margin-left: 280px;
+    .content-wrapper {
+      margin-left: 300px;
       flex: 1;
-      padding: 80px 10%;
-      max-width: 1200px;
+      display: flex;
+      justify-content: center;
     }
 
-    h1 { font-size: 48px; font-weight: 700; margin-bottom: 16px; letter-spacing: -0.02em; }
-    h2 { font-size: 28px; font-weight: 600; margin-top: 64px; margin-bottom: 24px; border-bottom: 1px solid var(--border); padding-bottom: 12px; }
-    h3 { font-size: 20px; font-weight: 500; margin-top: 32px; margin-bottom: 16px; color: var(--accent); }
+    .content {
+      width: 100%;
+      max-width: 860px;
+      padding: 100px 60px;
+    }
 
-    p { font-size: 17px; color: var(--text-muted); margin-bottom: 24px; font-weight: 300; }
+    /* Right TOC (Floating) */
+    .toc-aside {
+      width: 240px;
+      padding: 100px 32px;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      border-left: 1px solid var(--border);
+      font-size: 13px;
+    }
+
+    h1 { font-size: 56px; font-weight: 700; margin-bottom: 24px; letter-spacing: -0.04em; color: #fff; }
+    h2 { font-size: 32px; font-weight: 600; margin-top: 80px; margin-bottom: 24px; letter-spacing: -0.02em; color: #fff; }
+    h3 { font-size: 22px; font-weight: 500; margin-top: 48px; margin-bottom: 20px; color: var(--accent); }
+
+    p { font-size: 18px; color: var(--text-dim); margin-bottom: 28px; font-weight: 400; }
 
     .badge {
-      display: inline-block;
-      padding: 4px 12px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 16px;
       border-radius: 100px;
       font-size: 12px;
       font-weight: 600;
-      background: var(--border);
-      color: var(--text);
-      margin-bottom: 32px;
+      background: var(--accent-dim);
+      color: var(--accent);
+      margin-bottom: 40px;
+      border: 1px solid rgba(255, 77, 77, 0.2);
     }
 
     .feature-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-      gap: 24px;
-      margin: 40px 0;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 32px;
+      margin: 48px 0;
     }
 
     .feature-card {
       background: var(--card-bg);
       border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 24px;
+      border-radius: 20px;
+      padding: 32px;
+      transition: transform 0.3s ease;
     }
+    .feature-card:hover { transform: translateY(-5px); border-color: var(--accent-dim); }
+    .feature-card strong { display: block; margin-bottom: 12px; color: #fff; font-size: 18px; }
+    .feature-card span { font-size: 15px; color: var(--text-dim); }
 
-    .feature-card strong { display: block; margin-bottom: 8px; color: #fff; }
-    .feature-card span { font-size: 14px; color: var(--text-muted); }
-
+    /* Code Block Enhancements */
     code {
       font-family: 'JetBrains Mono', monospace;
       background: var(--code-bg);
-      padding: 2px 6px;
-      border-radius: 4px;
+      padding: 3px 8px;
+      border-radius: 6px;
       font-size: 14px;
       color: var(--accent);
+      border: 1px solid var(--border);
     }
 
     pre {
       background: var(--code-bg);
-      padding: 24px;
-      border-radius: 12px;
+      padding: 32px;
+      border-radius: 20px;
       overflow-x: auto;
       border: 1px solid var(--border);
-      margin: 24px 0;
+      margin: 32px 0;
+      position: relative;
     }
 
     pre code {
       background: none;
       padding: 0;
       color: #fff;
+      border: none;
+      font-size: 14px;
+      line-height: 1.8;
     }
+
+    .code-comment { color: #5c6370; font-style: italic; }
+    .code-keyword { color: #c678dd; }
+    .code-func { color: #61afef; }
+    .code-string { color: #98c379; }
 
     .callout {
-      background: rgba(255, 123, 123, 0.05);
-      border-left: 4px solid var(--accent);
-      padding: 24px;
-      border-radius: 0 12px 12px 0;
-      margin: 32px 0;
+      background: linear-gradient(135deg, rgba(255, 77, 77, 0.05) 0%, transparent 100%);
+      border: 1px solid rgba(255, 77, 77, 0.2);
+      padding: 32px;
+      border-radius: 20px;
+      margin: 48px 0;
+      position: relative;
+    }
+    .callout::before {
+      content: '⚠️';
+      position: absolute;
+      left: -15px; top: 50%; transform: translateY(-50%);
+      font-size: 24px;
     }
 
+    ul { padding-left: 20px; color: var(--text-dim); }
+    li { margin-bottom: 12px; }
+
     footer {
-      margin-top: 100px;
-      padding-top: 40px;
+      margin-top: 120px;
+      padding: 60px 0;
       border-top: 1px solid var(--border);
-      color: var(--text-muted);
+      color: var(--text-dim);
       font-size: 14px;
+      text-align: center;
+    }
+
+    @media (max-width: 1200px) {
+      .toc-aside { display: none; }
     }
 
     @media (max-width: 900px) {
       .sidebar { display: none; }
-      .content { margin-left: 0; padding: 40px 5%; }
+      .content-wrapper { margin-left: 0; }
+      .content { padding: 60px 24px; }
+    }
+
+    /* Animation */
+    .fade-in {
+      animation: fadeIn 0.8s ease forwards;
+      opacity: 0;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
     }
   </style>
 </head>
@@ -170,91 +251,134 @@
     </a>
     
     <div class="nav-group">
-      <div class="nav-label">Getting Started</div>
-      <a href="#overview" class="nav-link">Overview</a>
+      <div class="nav-label">Core Concepts</div>
+      <a href="#overview" class="nav-link active">Overview</a>
       <a href="#installation" class="nav-link">Installation</a>
       <a href="#deployment" class="nav-link">Deployment</a>
     </div>
 
     <div class="nav-group">
-      <div class="nav-label">Features</div>
-      <a href="#forensics" class="nav-link">Forensic Capture</a>
-      <a href="#geolocation" class="nav-link">GPS & Tracking</a>
-      <a href="#dashboard" class="nav-link">Dashboard Usage</a>
+      <div class="nav-label">Forensic Logic</div>
+      <a href="#forensics" class="nav-link">Capture Engines</a>
+      <a href="#geolocation" class="nav-link">Network Tracking</a>
+      <a href="#dashboard" class="nav-link">Workspace Usage</a>
     </div>
 
     <div class="nav-group">
-      <div class="nav-label">Administration</div>
-      <a href="#security" class="nav-link">Security & Auth</a>
-      <a href="#data" class="nav-link">Data Management</a>
-      <a href="#legal" class="nav-link">Legal Disclosure</a>
+      <div class="nav-label">System Admin</div>
+      <a href="#security" class="nav-link">Auth Architecture</a>
+      <a href="#data" class="nav-link">Data Persistence</a>
+      <a href="#legal" class="nav-link">Legal Policy</a>
     </div>
   </nav>
 
-  <main class="content">
-    <div class="badge">v2.1.0-stable</div>
-    <h1 id="overview">Documentation</h1>
-    <p>Welcome to the official technical guide for the Speed Test Forensic Suite. This platform is engineered for high-precision metadata collection and network diagnostic research.</p>
-
-    <div class="feature-grid">
-      <div class="feature-card">
-        <strong>Stealth Capture</strong>
-        <span>Silent collection of device fingerprints and network identifiers.</span>
+  <div class="content-wrapper">
+    <main class="content">
+      <div class="fade-in">
+        <div class="badge">
+          <span>●</span> Stable Release v2.1
+        </div>
+        <h1 id="overview">Technical Documentation</h1>
+        <p>This is the comprehensive architecture and operational guide for the Speed Test Forensic Suite. A refined diagnostic ecosystem engineered for deep network attribution and session forensics.</p>
       </div>
-      <div class="feature-card">
-        <strong>Sensor Fusion</strong>
-        <span>High-accuracy GPS tracking combined with ISP geolocation.</span>
+
+      <div class="feature-grid fade-in" style="animation-delay: 0.2s;">
+        <div class="feature-card">
+          <strong>Silent Fingerprinting</strong>
+          <span>Attribution based on hardware artifacts and rendering engines.</span>
+        </div>
+        <div class="feature-card">
+          <strong>Geometric Mapping</strong>
+          <span>Real-time GPS coordinate fusion with IP-based triangulation.</span>
+        </div>
       </div>
-      <div class="feature-card">
-        <strong>Secure Access</strong>
-        <span>Role-based access control with session-aware cookie management.</span>
-      </div>
-    </div>
 
-    <h2 id="installation">Local Installation</h2>
-    <p>To run the diagnostic workspace on your local machine, ensure you have Node.js (v18 or higher) installed.</p>
-    <pre><code># Install dependencies
-npm install
+      <section id="installation" class="fade-in" style="animation-delay: 0.4s;">
+        <h2>Environment Setup</h2>
+        <p>The suite is built on a high-concurrency Node.js runtime. Ensure your environment meets the minimum requirements before deployment.</p>
+        <pre><code><span class="code-comment"># Install production dependencies</span>
+<span class="code-keyword">npm</span> install
 
-# Start the environment
-node server.js</code></pre>
+<span class="code-comment"># Boot the diagnostic server</span>
+<span class="code-keyword">node</span> server.js</code></pre>
+      </section>
 
-    <h2 id="forensics">Forensic Capabilities</h2>
-    <p>The suite employs advanced attribution techniques to identify visitors beyond simple IP addresses:</p>
-    <ul>
-      <li><strong>WebRTC Leak:</strong> Bypasses standard VPN tunnels to resolve local network interfaces.</li>
-      <li><strong>Hardware Hash:</strong> Combines GPU cores, Audio context, and Canvas rendering to create a unique <code>deviceId</code>.</li>
-      <li><strong>Network Persistence:</strong> Tracks visit frequency and session history for each identified device.</li>
-    </ul>
+      <section id="forensics" class="fade-in" style="animation-delay: 0.6s;">
+        <h2>Forensic Engines</h2>
+        <p>The core engine utilizes three primary layers for visitor attribution and metadata harvesting:</p>
+        <ul>
+          <li><strong>WebRTC Scrutiny:</strong> Resolves internal gateway addresses bypassing local tunnel encapsulation.</li>
+          <li><strong>Canvas Injection:</strong> Generates a unique cryptographic hash from a hardware-rendered image buffer.</li>
+          <li><strong>Persistence Sync:</strong> Maintains state across sessions using a global cloud-synchronized ID system.</li>
+        </ul>
+      </section>
 
-    <h2 id="security">Security & Authentication</h2>
-    <p>The dashboard is protected by an industrial-grade authentication layer. You can configure the credentials via environment variables:</p>
-    <pre><code>ADMIN_USER=Jassim99x
-ADMIN_PASS=Jassim99x</code></pre>
-    <div class="callout">
-      <strong>Important:</strong> The session is maintained via <code>httpOnly</code> cookies to prevent XSS-based credential theft. Always ensure your deployment uses HTTPS in production.
-    </div>
+      <section id="security" class="fade-in">
+        <h2>Secure Authentication</h2>
+        <p>The administrative workspace is guarded by a session-aware firewall. Configuration is strictly managed through environment variables.</p>
+        <pre><code><span class="code-keyword">export</span> ADMIN_USER=<span class="code-string">"Jassim99x"</span>
+<span class="code-keyword">export</span> ADMIN_PASS=<span class="code-string">"Jassim99x"</span></code></pre>
+        <div class="callout">
+          <strong>Critical:</strong> All administrative routes are protected by a middleware layer that enforces <code>HttpOnly</code> cookie validation to mitigate token leakage.
+        </div>
+      </section>
 
-    <h2 id="deployment">Cloud Deployment</h2>
-    <p>This project is optimized for <strong>Vercel</strong> and <strong>Render</strong>. The persistence layer uses <code>JSONBlob</code>, allowing the application to remain stateless while maintaining a consistent database across distributed nodes.</p>
+      <section id="legal" class="fade-in">
+        <h2>Compliance Policy</h2>
+        <p>Utilization of this suite implies adherence to global data privacy standards. This tool is designed for authorized diagnostic scenarios and academic security research.</p>
+      </section>
 
-    <h2 id="legal">Legal & Ethical Usage</h2>
-    <p>This software is provided for authorized security research and diagnostic testing only. Use of this tool for unauthorized monitoring of individuals is strictly prohibited and may be illegal in your jurisdiction.</p>
+      <footer>
+        &copy; 2026 Jasim Kareem / Articles for Free Minds.  
+        <br>
+        <small style="margin-top: 10px; display: block; opacity: 0.5;">Proprietary Forensic Software</small>
+      </footer>
+    </main>
 
-    <footer>
-      &copy; 2026 Jasim Kareem / Articles for Free Minds. All rights reserved.
-    </footer>
-  </main>
+    <aside class="toc-aside">
+      <div class="nav-label">On this page</div>
+      <a href="#overview" class="nav-link">Overview</a>
+      <a href="#installation" class="nav-link">Setup</a>
+      <a href="#forensics" class="nav-link">Forensics</a>
+      <a href="#security" class="nav-link">Security</a>
+      <a href="#legal" class="nav-link">Compliance</a>
+    </aside>
+  </div>
 
   <script>
-    // Smooth scrolling for navigation
-    document.querySelectorAll('.nav-link').forEach(link => {
-      link.addEventListener('click', e => {
-        e.preventDefault();
-        document.querySelector(link.getAttribute('href')).scrollIntoView({
-          behavior: 'smooth'
-        });
+    // Smooth scrolling & Scroll Spy logic
+    const links = document.querySelectorAll('.nav-link');
+    const sections = document.querySelectorAll('section, h1');
+
+    window.addEventListener('scroll', () => {
+      let current = "";
+      sections.forEach(section => {
+        const sectionTop = section.offsetTop;
+        if (pageYOffset >= sectionTop - 120) {
+          current = section.getAttribute('id');
+        }
       });
+
+      links.forEach(link => {
+        link.classList.remove('active');
+        if (link.getAttribute('href').includes(current)) {
+          link.classList.add('active');
+        }
+      });
+    });
+
+    // Fade-in observer
+    const observerOptions = { threshold: 0.1 };
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('fade-in');
+        }
+      });
+    }, observerOptions);
+
+    document.querySelectorAll('section, .feature-grid, footer').forEach(el => {
+      observer.observe(el);
     });
   </script>
 </body>
