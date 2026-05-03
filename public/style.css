@@ -361,73 +361,97 @@ h3 {
   top: 66%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 7.5rem;
-  height: 7.5rem;
+  width: 8.5rem;
+  height: 8.5rem;
   display: flex;
   justify-content: center;
   align-items: center;
   border: none;
   border-radius: 50%;
-  background: transparent;
+  background: radial-gradient(circle at center, rgba(0, 229, 255, 0.1) 0%, rgba(17, 18, 22, 0.9) 80%);
   color: var(--accent);
   cursor: pointer;
   z-index: 10;
-  transition: opacity 0.3s ease, transform 0.2s ease;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  box-shadow: inset 0 0 20px rgba(0, 229, 255, 0.05);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  -webkit-tap-highlight-color: transparent;
 }
 
 .start-btn::before {
   content: "";
   position: absolute;
-  inset: 10px;
+  inset: 0;
   border-radius: 50%;
-  background: rgba(0, 229, 255, 0.1);
-  box-shadow: 0 0 30px rgba(0, 229, 255, 0.2);
-  border: 1px solid rgba(0, 229, 255, 0.3);
-  transition: all 0.3s ease;
+  border: 1.5px solid rgba(0, 229, 255, 0.4);
+  box-shadow: 0 0 25px rgba(0, 229, 255, 0.15);
+  transition: all 0.4s ease;
 }
 
 .start-btn.hidden {
   opacity: 0;
   pointer-events: none;
-  transform: translate(-50%, -50%) scale(0.9);
+  transform: translate(-50%, -50%) scale(0.85);
 }
 
 .start-btn span:not(.start-ring) {
   position: relative;
   z-index: 2;
   font-family: var(--sans);
-  font-weight: 500;
-  font-size: 1.4rem;
-  letter-spacing: 0;
+  font-weight: 800;
+  font-size: 1.8rem;
+  letter-spacing: 1px;
   text-transform: uppercase;
+  text-shadow: 0 0 15px rgba(0, 229, 255, 0.5);
+  transition: all 0.3s ease;
 }
 
 .start-btn:hover {
-  transform: translate(-50%, -50%) scale(1.04);
+  transform: translate(-50%, -50%) scale(1.06);
+  background: radial-gradient(circle at center, rgba(0, 229, 255, 0.2) 0%, rgba(17, 18, 22, 0.9) 80%);
 }
+
 .start-btn:hover::before {
-  background: rgba(0, 229, 255, 0.15);
+  border: 1.5px solid rgba(0, 229, 255, 0.8);
   box-shadow: 0 0 40px rgba(0, 229, 255, 0.3);
 }
 
+.start-btn:hover span:not(.start-ring) {
+  text-shadow: 0 0 25px rgba(0, 229, 255, 0.8);
+  transform: scale(1.05);
+}
+
 .start-btn:active {
-  transform: translate(-50%, -50%) scale(0.96);
+  transform: translate(-50%, -50%) scale(0.94);
+  transition: all 0.1s ease;
+}
+
+.start-btn:active::before {
+  border-color: rgba(0, 229, 255, 1);
+  box-shadow: 0 0 15px rgba(0, 229, 255, 0.5);
 }
 
 .start-btn:disabled {
-  cursor: wait;
-  opacity: 0.65;
-  transform: translate(-50%, -50%);
+  pointer-events: none;
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.9);
 }
 
 .start-ring {
   position: absolute;
-  inset: -2px;
+  inset: -6px;
   border-radius: 50%;
-  border: 1px solid rgba(0, 229, 255, 0.4);
-  animation: pulse 2.5s ease-out infinite;
+  border: 1px solid rgba(0, 229, 255, 0.3);
+  animation: pulse-ring 2.5s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+  pointer-events: none;
 }
 
+@keyframes pulse-ring {
+  0% { transform: scale(0.95); opacity: 1; border-width: 2px; }
+  70% { transform: scale(1.35); opacity: 0; border-width: 1px; }
+  100% { transform: scale(1.35); opacity: 0; }
+}
 @keyframes pulse {
   from { opacity: 1; transform: scale(0.9); }
   to { opacity: 0; transform: scale(1.32); }
