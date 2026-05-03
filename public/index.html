@@ -54,152 +54,173 @@
       <section id="speedPanel" class="panel-view active" aria-labelledby="speedTitle">
         <h1 class="sr-only" id="speedTitle">Run network speed test</h1>
 
-        <div id="stateIdle" class="state-card scan-card">
-          <div class="scan-header">
-            <div>
-              <p class="eyebrow">اختبار الاتصال المباشر</p>
-              <h2>بدء الفحص</h2>
-            </div>
-            <button id="restartTestBtnHeader" type="button" data-action="reset-test">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 4v6h-6"/></svg>
-              إعادة الاختبار
-            </button>
-          </div>
-
-          <div class="gauge-wrap" aria-live="polite">
-            <svg class="gauge-svg" viewBox="0 0 400 230" role="img" aria-label="Speed gauge">
-              <defs>
-                <filter id="glow"><feGaussianBlur stdDeviation="3" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-              </defs>
-              <g id="tickMarks" opacity="0.35"></g>
-              <path d="M 50 200 A 150 150 0 0 1 350 200" fill="none" stroke="rgba(255,255,255,0.11)" stroke-width="10" stroke-linecap="round"/>
-              <path id="activeArc" d="M 50 200 A 150 150 0 0 1 350 200" fill="none" stroke="#95f0c0" stroke-width="10" stroke-linecap="round" stroke-dasharray="471" stroke-dashoffset="471" filter="url(#glow)"/>
-              <line id="needle" x1="200" y1="200" x2="200" y2="74" stroke="rgba(244,248,240,0.85)" stroke-width="2" stroke-linecap="round" opacity="0" filter="url(#glow)"/>
-              <circle cx="200" cy="200" r="7" fill="#101817" stroke="rgba(255,255,255,0.24)" stroke-width="1"/>
-            <text id="speedNum" class="hidden-initially" x="200" y="154" text-anchor="middle" fill="#ffffff" font-size="62" font-weight="300" font-family="Inter, sans-serif">0</text>
-            <text id="speedUnit" class="hidden-initially" x="200" y="183" text-anchor="middle" fill="rgba(255,255,255,0.54)" font-size="14" font-weight="400" font-family="Inter, sans-serif">Mbps</text>
-            <text id="phaseLabel" class="hidden-initially" x="200" y="220" text-anchor="middle" fill="rgba(255,255,255,0.44)" font-size="10" font-weight="400" letter-spacing="1px" font-family="Inter, sans-serif"></text>
-          </svg>
-
-          <button id="startBtn" class="start-btn gauge-start-btn" type="button" data-action="start-test">
-            <span class="start-ring" aria-hidden="true"></span>
-            <span>ابدأ</span>
-          </button>
-        </div>
-
-        <div class="server-status" id="serverStatus">
-          <span class="status-dot" aria-hidden="true"></span>
-          <span id="statusText">مستعد</span>
-        </div>
-        </div>
-
-        <section id="stateResults" class="results-panel hidden" aria-label="Speed test results">
-          <div class="results-hero">
-            <article class="metric-card">
-              <span class="metric-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 5v14M19 12l-7 7-7-7"/></svg></span>
-              <strong id="resDown">—</strong>
-              <small>تنزيل (ميجابت/ث)</small>
-            </article>
-            <article class="metric-card">
-              <span class="metric-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></svg></span>
-              <strong id="resUp">—</strong>
-              <small>رفع (ميجابت/ث)</small>
-            </article>
-            <article class="metric-card">
-              <span class="metric-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2"/></svg></span>
-              <strong id="resPing">—</strong>
-              <small>استجابة (ملي ث)</small>
-            </article>
-            <article class="metric-card">
-              <span class="metric-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg></span>
-              <strong id="resJitter">—</strong>
-              <small>تذبذب (ملي ث)</small>
-            </article>
-          </div>
-
-          <div class="details-grid">
-            <article class="detail-card grade-card">
-              <div class="grade-ring">
-                <svg viewBox="0 0 100 100" aria-hidden="true">
-                  <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="7"/>
-                  <circle id="gradeCircle" cx="50" cy="50" r="42" fill="none" stroke="#95f0c0" stroke-width="5" stroke-linecap="round" stroke-dasharray="264" stroke-dashoffset="264" transform="rotate(-90 50 50)"/>
-                </svg>
-                <span id="gradeLetter">—</span>
+        <div class="hero-grid">
+          <div class="main-content-flow">
+            <div id="stateIdle" class="state-card scan-card">
+              <div class="scan-header">
+                <div>
+                  <p class="eyebrow">اختبار الاتصال المباشر</p>
+                  <h2>بدء الفحص</h2>
+                </div>
+                <button id="restartTestBtnHeader" type="button" data-action="reset-test">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 4v6h-6"/></svg>
+                  إعادة الاختبار
+                </button>
               </div>
-              <div>
-                <small>تصنيف السرعة</small>
-                <strong id="gradeDesc">—</strong>
+
+              <div class="gauge-wrap" aria-live="polite">
+                <svg class="gauge-svg" viewBox="0 0 400 230" role="img" aria-label="Speed gauge">
+                  <defs>
+                    <filter id="glow"><feGaussianBlur stdDeviation="3" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+                  </defs>
+                  <g id="tickMarks" opacity="0.35"></g>
+                  <path d="M 50 200 A 150 150 0 0 1 350 200" fill="none" stroke="rgba(255,255,255,0.11)" stroke-width="10" stroke-linecap="round"/>
+                  <path id="activeArc" d="M 50 200 A 150 150 0 0 1 350 200" fill="none" stroke="#95f0c0" stroke-width="10" stroke-linecap="round" stroke-dasharray="471" stroke-dashoffset="471" filter="url(#glow)"/>
+                  <line id="needle" x1="200" y1="200" x2="200" y2="74" stroke="rgba(244,248,240,0.85)" stroke-width="2" stroke-linecap="round" opacity="0" filter="url(#glow)"/>
+                  <circle cx="200" cy="200" r="7" fill="#101817" stroke="rgba(255,255,255,0.24)" stroke-width="1"/>
+                <text id="speedNum" class="hidden-initially" x="200" y="154" text-anchor="middle" fill="#ffffff" font-size="62" font-weight="300" font-family="Inter, sans-serif">0</text>
+                <text id="speedUnit" class="hidden-initially" x="200" y="183" text-anchor="middle" fill="rgba(255,255,255,0.54)" font-size="14" font-weight="400" font-family="Inter, sans-serif">Mbps</text>
+                <text id="phaseLabel" class="hidden-initially" x="200" y="220" text-anchor="middle" fill="rgba(255,255,255,0.44)" font-size="10" font-weight="400" letter-spacing="1px" font-family="Inter, sans-serif"></text>
+              </svg>
+
+              <button id="startBtn" class="start-btn gauge-start-btn" type="button" data-action="start-test">
+                <span class="start-ring" aria-hidden="true"></span>
+                <span>ابدأ</span>
+              </button>
+            </div>
+
+            <div class="server-status" id="serverStatus">
+              <span class="status-dot" aria-hidden="true"></span>
+              <span id="statusText">مستعد</span>
+            </div>
+            </div>
+
+            <section id="stateResults" class="results-panel hidden" aria-label="Speed test results">
+              <div class="results-hero">
+                <article class="metric-card">
+                  <span class="metric-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 5v14M19 12l-7 7-7-7"/></svg></span>
+                  <strong id="resDown">—</strong>
+                  <small>تنزيل (ميجابت/ث)</small>
+                </article>
+                <article class="metric-card">
+                  <span class="metric-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></svg></span>
+                  <strong id="resUp">—</strong>
+                  <small>رفع (ميجابت/ث)</small>
+                </article>
+                <article class="metric-card">
+                  <span class="metric-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2"/></svg></span>
+                  <strong id="resPing">—</strong>
+                  <small>استجابة (ملي ث)</small>
+                </article>
+                <article class="metric-card">
+                  <span class="metric-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg></span>
+                  <strong id="resJitter">—</strong>
+                  <small>تذبذب (ملي ث)</small>
+                </article>
               </div>
-            </article>
-            <article class="detail-card">
-              <small>خادم الاختبار</small>
-              <strong id="resServer">—</strong>
-            </article>
-            <article class="detail-card">
-              <small>شبكتك</small>
-              <strong id="resISP">—</strong>
-            </article>
-            <article class="detail-card">
-              <small>الاتصال</small>
-              <strong id="resConn">—</strong>
-            </article>
+
+              <div class="details-grid">
+                <article class="detail-card grade-card">
+                  <div class="grade-ring">
+                    <svg viewBox="0 0 100 100" aria-hidden="true">
+                      <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="7"/>
+                      <circle id="gradeCircle" cx="50" cy="50" r="42" fill="none" stroke="#95f0c0" stroke-width="5" stroke-linecap="round" stroke-dasharray="264" stroke-dashoffset="264" transform="rotate(-90 50 50)"/>
+                    </svg>
+                    <span id="gradeLetter">—</span>
+                  </div>
+                  <div>
+                    <small>تصنيف السرعة</small>
+                    <strong id="gradeDesc">—</strong>
+                  </div>
+                </article>
+                <article class="detail-card">
+                  <small>خادم الاختبار</small>
+                  <strong id="resServer">—</strong>
+                </article>
+                <article class="detail-card">
+                  <small>شبكتك</small>
+                  <strong id="resISP">—</strong>
+                </article>
+                <article class="detail-card">
+                  <small>الاتصال</small>
+                  <strong id="resConn">—</strong>
+                </article>
+              </div>
+
+              <div class="latency-section">
+                <div class="section-title-row">
+                  <strong>توزيع الاستجابة</strong>
+                  <span id="latencyAvg">—</span>
+                </div>
+                <div class="latency-bars" id="latencyBars"></div>
+              </div>
+
+              <div class="diagnostic-report">
+                <div class="section-title-row">
+                  <strong>تفاصيل الاتصال</strong>
+                  <span id="resultSummary">—</span>
+                </div>
+                <div class="report-grid">
+                  <article>
+                    <small>البث المباشر</small>
+                    <strong id="insightStreaming">—</strong>
+                  </article>
+                  <article>
+                    <small>الألعاب</small>
+                    <strong id="insightGaming">—</strong>
+                  </article>
+                  <article>
+                    <small>رفع الملفات</small>
+                    <strong id="insightUpload">—</strong>
+                  </article>
+                  <article>
+                    <small>الاستقرار</small>
+                    <strong id="insightStability">—</strong>
+                  </article>
+                </div>
+              </div>
+            </section>
+
+            <!-- Trust Bar -->
+            <div class="trust-bar">
+              <p>شركاء البنية التحتية العالمية</p>
+              <div class="partner-logos">
+                <span>Cloudflare</span>
+                <span>Google Cloud</span>
+                <span>AWS</span>
+                <span>Vercel</span>
+              </div>
+            </div>
           </div>
 
-          <div class="latency-section">
-            <div class="section-title-row">
-              <strong>توزيع الاستجابة</strong>
-              <span id="latencyAvg">—</span>
+          <!-- Enterprise Sidebar -->
+          <aside class="enterprise-sidebar">
+            <div class="promo-box">
+              <span class="badge">Enterprise</span>
+              <h3>حلول الشركات</h3>
+              <p>هل تحتاج إلى ربط فروع مؤسستك بأعلى سرعة؟ اكتشف حلولنا المخصصة.</p>
+              <button class="btn-sm">اكتشف المزيد</button>
             </div>
-            <div class="latency-bars" id="latencyBars"></div>
-          </div>
 
-          <div class="diagnostic-report">
-            <div class="section-title-row">
-              <strong>تفاصيل الاتصال</strong>
-              <span id="resultSummary">—</span>
+            <div class="promo-box gold">
+              <h3>تحسين الأداء Pro</h3>
+              <p>احصل على أولوية الوصول إلى خوادم 10Gbps وتقارير تحليلية معمقة.</p>
+              <button class="btn-sm secondary">ترقية الآن</button>
             </div>
-            <div class="report-grid">
-              <article>
-                <small>البث المباشر</small>
-                <strong id="insightStreaming">—</strong>
-              </article>
-              <article>
-                <small>الألعاب</small>
-                <strong id="insightGaming">—</strong>
-              </article>
-              <article>
-                <small>رفع الملفات</small>
-                <strong id="insightUpload">—</strong>
-              </article>
-              <article>
-                <small>الاستقرار</small>
-                <strong id="insightStability">—</strong>
-              </article>
-            </div>
-          </div>
 
-          </div>
-          
-          <div id="calibrationView" class="calibration-container hidden">
-            <div class="calibration-header">
-              <h3>التحقق من البنية التحتية</h3>
-              <p>يرجى تحديد موقعك الدقيق على الخريطة لضبط الخوادم الإقليمية للحصول على تقرير معتمد.</p>
+            <div class="network-feed">
+              <h4>حالة الشبكة العالمية</h4>
+              <div class="feed-item">
+                <span class="time">منذ 5 د</span>
+                <p>تفعيل خادم الشرق الأوسط الجديد (Node 4).</p>
+              </div>
+              <div class="feed-item">
+                <span class="time">منذ 20 د</span>
+                <p>تحسين توجيه البيانات في منطقة الخليج العربي.</p>
+              </div>
             </div>
-            <div id="calibrationMap" class="calibration-map"></div>
-            <button id="confirmPinBtn" class="action-btn primary-btn" style="width:100%; margin-top:1rem;">تأكيد موقع الشبكة</button>
-          </div>
-
-          <div class="result-actions">
-            <button class="action-btn primary-btn" type="button" data-action="reset-test">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 4v6h-6"/></svg>
-              إعادة الاختبار
-            </button>
-            <button class="action-btn" type="button" data-action="share-results">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg>
-              مشاركة
-            </button>
-          </div>
-        </section>
+          </aside>
+        </div>
 
         <!-- Fake Legitimate Content Section -->
         <section class="marketing-features" aria-label="Why choose مقياس السرعة Global">

@@ -1804,3 +1804,155 @@ h3 {
   transform: translateY(0) scale(1.05);
 }
 
+
+/* Enterprise & Layout */
+.hero-grid {
+  display: flex;
+  gap: 30px;
+  align-items: flex-start;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.main-content-flow {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
+
+.enterprise-sidebar {
+  width: 320px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.promo-box {
+  background: rgba(255,255,255,0.02);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  padding: 24px;
+  position: relative;
+}
+
+.promo-box.gold {
+  background: linear-gradient(135deg, rgba(149, 240, 192, 0.05) 0%, rgba(10, 15, 14, 0) 100%);
+  border-color: rgba(149, 240, 192, 0.2);
+}
+
+.promo-box .badge {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: var(--accent);
+  color: var(--bg);
+  font-size: 10px;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 20px;
+}
+
+.promo-box h3 {
+  font-size: 18px;
+  margin-bottom: 10px;
+}
+
+.promo-box p {
+  font-size: 14px;
+  color: var(--text-dim);
+  line-height: 1.5;
+  margin-bottom: 20px;
+}
+
+.btn-sm {
+  width: 100%;
+  padding: 10px;
+  border-radius: 12px;
+  border: none;
+  background: var(--text);
+  color: var(--bg);
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.btn-sm.secondary {
+  background: rgba(255,255,255,0.05);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+
+.network-feed {
+  padding: 10px;
+}
+
+.network-feed h4 {
+  font-size: 11px;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  letter-spacing: 0.1em;
+  margin-bottom: 20px;
+}
+
+.feed-item {
+  margin-bottom: 20px;
+}
+
+.feed-item .time {
+  font-size: 10px;
+  color: var(--accent);
+  font-weight: 600;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.feed-item p {
+  font-size: 12px;
+  color: var(--text-dim);
+  line-height: 1.4;
+}
+
+.trust-bar {
+  margin-top: 40px;
+  padding: 30px;
+  border-top: 1px solid var(--border);
+  text-align: center;
+}
+
+.trust-bar p {
+  font-size: 11px;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  letter-spacing: 0.1em;
+  margin-bottom: 24px;
+}
+
+.partner-logos {
+  display: flex;
+  justify-content: center;
+  gap: 40px;
+  flex-wrap: wrap;
+}
+
+.partner-logos span {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-dim);
+  opacity: 0.5;
+  cursor: default;
+  transition: opacity 0.3s;
+}
+
+.partner-logos span:hover {
+  opacity: 1;
+}
+
+@media (max-width: 1100px) {
+  .hero-grid {
+    flex-direction: column;
+  }
+  .enterprise-sidebar {
+    width: 100%;
+  }
+}
