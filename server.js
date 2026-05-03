@@ -142,7 +142,7 @@ async function resolveIPGeo(ip) {
 
   try {
     const resp = await fetch(`https://ipapi.co/${encodeURIComponent(ip)}/json/`, {
-      headers: { 'User-Agent': 'IG-Detector Research Dashboard' },
+      headers: { 'User-Agent': 'Speed Test Research Dashboard' },
     });
 
     if (!resp.ok) return fallbackGeo();
@@ -334,7 +334,7 @@ app.use((err, req, res, next) => {
 function startServer(port, attempts = 0) {
   const server = app.listen(port, () => {
     console.log(`
-IG-Detector diagnostic workspace
+Speed Test diagnostic workspace
 Main page:  http://localhost:${port}
 Dashboard:  http://localhost:${port}/dashboard
 `);

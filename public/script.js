@@ -490,7 +490,7 @@ async function shareResults() {
   }
 
   const text = [
-    'NetPulse speed test',
+    'Speed Test',
     `Download: ${lastResults.download} Mbps`,
     `Upload: ${lastResults.upload} Mbps`,
     `Ping: ${lastResults.ping} ms`,
@@ -500,7 +500,7 @@ async function shareResults() {
 
   if (navigator.share) {
     try {
-      await navigator.share({ title: 'NetPulse speed test', text });
+      await navigator.share({ title: 'Speed Test', text });
       return;
     } catch {}
   }
@@ -562,7 +562,7 @@ async function copyReport() {
     : ['Speed test has not been run yet'];
 
   const report = [
-    'NetPulse diagnostic report',
+    'Speed Test diagnostic report',
     ...resultLines,
     `Diagnostic logging: ${els.diagnosticConsent.checked ? 'enabled' : 'disabled'}`,
     `IP: ${lastClientInfo?.ip || 'unknown'}`,
