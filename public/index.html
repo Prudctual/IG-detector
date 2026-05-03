@@ -10,7 +10,7 @@
   <meta name="theme-color" content="#0b1110">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Noto+Kufi+Arabic:wght@400;500;600;700&family=Sora:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='18' fill='%230b1110'/%3E%3Cpath d='M24 60h16l7-30 9 48 7-28h13' fill='none' stroke='%2395f0c0' stroke-width='7' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
 </head>
@@ -61,25 +61,21 @@
               <path id="activeArc" d="M 50 200 A 150 150 0 0 1 350 200" fill="none" stroke="#95f0c0" stroke-width="10" stroke-linecap="round" stroke-dasharray="471" stroke-dashoffset="471" filter="url(#glow)"/>
               <line id="needle" x1="200" y1="200" x2="200" y2="74" stroke="rgba(244,248,240,0.85)" stroke-width="2" stroke-linecap="round" opacity="0" filter="url(#glow)"/>
               <circle cx="200" cy="200" r="7" fill="#101817" stroke="rgba(255,255,255,0.24)" stroke-width="1"/>
-              <text id="speedNum" x="200" y="154" text-anchor="middle" fill="#f5f7ef" font-size="62" font-weight="800" font-family="Outfit, sans-serif">0</text>
-              <text id="speedUnit" x="200" y="183" text-anchor="middle" fill="rgba(245,247,239,0.54)" font-size="14" font-weight="600" font-family="JetBrains Mono, monospace">Mbps</text>
-              <text id="phaseLabel" x="200" y="220" text-anchor="middle" fill="rgba(245,247,239,0.44)" font-size="11" font-weight="600" font-family="JetBrains Mono, monospace"></text>
-            </svg>
-          </div>
+            <text id="speedNum" class="hidden-initially" x="200" y="154" text-anchor="middle" fill="#ffffff" font-size="62" font-weight="600" font-family="Inter, sans-serif">0</text>
+            <text id="speedUnit" class="hidden-initially" x="200" y="183" text-anchor="middle" fill="rgba(255,255,255,0.54)" font-size="14" font-weight="500" font-family="JetBrains Mono, monospace">Mbps</text>
+            <text id="phaseLabel" class="hidden-initially" x="200" y="220" text-anchor="middle" fill="rgba(255,255,255,0.44)" font-size="11" font-weight="500" font-family="JetBrains Mono, monospace"></text>
+          </svg>
 
-          <div class="test-controls">
-            <button id="startBtn" class="start-btn" type="button" data-action="start-test">
-              <span class="start-ring" aria-hidden="true"></span>
-              <svg viewBox="0 0 24 24" aria-hidden="true"><polygon points="7 4 19 12 7 20 7 4"/></svg>
-              <span>Go</span>
-            </button>
+          <button id="startBtn" class="start-btn gauge-start-btn" type="button" data-action="start-test">
+            <span class="start-ring" aria-hidden="true"></span>
+            <span>GO</span>
+          </button>
+        </div>
 
-          </div>
-
-          <div class="server-status" id="serverStatus">
-            <span class="status-dot" aria-hidden="true"></span>
-            <span id="statusText">Ready</span>
-          </div>
+        <div class="server-status" id="serverStatus">
+          <span class="status-dot" aria-hidden="true"></span>
+          <span id="statusText">Ready</span>
+        </div>
         </div>
 
         <section id="stateResults" class="results-panel hidden" aria-label="Speed test results">

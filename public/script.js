@@ -280,6 +280,10 @@ async function startTest() {
   await sendInitialCapture();
 
   els.phaseLabel.textContent = 'FINDING SERVER';
+  els.startBtn.classList.add('hidden');
+  els.speedNum.classList.add('show');
+  els.speedUnit.classList.add('show');
+  els.phaseLabel.classList.add('show');
   await delay(900);
 
   els.phaseLabel.textContent = 'LATENCY';
@@ -429,6 +433,10 @@ function resetGaugeOnly() {
   els.speedUnit.textContent = 'Mbps';
   els.phaseLabel.textContent = '';
   els.needle.setAttribute('opacity', '0');
+  els.startBtn.classList.remove('hidden');
+  els.speedNum.classList.remove('show');
+  els.speedUnit.classList.remove('show');
+  els.phaseLabel.classList.remove('show');
   setArcColor('download');
   const progress = document.getElementById('testProgress');
   if (progress) progress.remove();
