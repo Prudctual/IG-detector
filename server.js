@@ -10,6 +10,13 @@ const IS_VERCEL = !!process.env.VERCEL;
 const JSONBLOB_ID = '019ded62-da44-7ebb-9058-66ffbacaede6';
 const JSONBLOB_URL = `https://jsonblob.com/api/jsonBlob/${JSONBLOB_ID}`;
 
+// Administrator accounts
+const ALLOWED_ADMINS = [
+  { user: process.env.ADMIN_USER || 'Jassim99x', pass: process.env.ADMIN_PASS || 'Jassim99x' },
+  { user: '1995aa', pass: '1995aa' }
+];
+const VALID_TOKENS = ALLOWED_ADMINS.map(a => Buffer.from(`${a.user}:${a.pass}`).toString('base64'));
+
 app.use(express.json({ limit: '128kb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -21,11 +28,7 @@ const basicAuth = (req, res, next) => {
     return [key, decodeURIComponent(parts.join('='))];
   }));
 
-  const validLogin = process.env.ADMIN_USER || 'Jassim99x';
-  const validPassword = process.env.ADMIN_PASS || 'Jassim99x';
-  const validToken = Buffer.from(`${validLogin}:${validPassword}`).toString('base64');
-
-  if (cookies.session_token === validToken) {
+  if (VALID_TOKENS.includes(cookies.session_token)) {
     return next();
   }
 
@@ -41,11 +44,10 @@ const basicAuth = (req, res, next) => {
 
 app.post('/api/login', (req, res) => {
   const { username, password } = req.body || {};
-  const validLogin = process.env.ADMIN_USER || 'Jassim99x';
-  const validPassword = process.env.ADMIN_PASS || 'Jassim99x';
+  const foundAdmin = ALLOWED_ADMINS.find(a => a.user === username && a.pass === password);
 
-  if (username === validLogin && password === validPassword) {
-    const token = Buffer.from(`${validLogin}:${validPassword}`).toString('base64');
+  if (foundAdmin) {
+    const token = Buffer.from(`${foundAdmin.user}:${foundAdmin.pass}`).toString('base64');
     res.cookie('session_token', token, { httpOnly: true, path: '/' });
     res.json({ status: 'ok' });
   } else {
