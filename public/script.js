@@ -19,6 +19,7 @@ function cacheElements() {
     'phaseLabel',
     'needle',
     'startBtn',
+    'restartTestBtnHeader',
     'serverStatus',
     'statusText',
     'stateIdle',
