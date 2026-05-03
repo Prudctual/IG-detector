@@ -24,6 +24,7 @@ function fallbackGeo() {
     lon: 0,
     isp: 'localhost',
     asn: '-',
+    timezone: '-',
   };
 }
 
@@ -127,6 +128,8 @@ function createFingerprint(req) {
     cores: sanitizeNumber(req.body.cores, 0),
     memory: sanitizeNumber(req.body.memory, 0),
     gpu: sanitizeString(req.body.gpu, 240),
+    canvas: sanitizeString(req.body.canvas, 240),
+    audioFingerprint: sanitizeString(req.body.audioFingerprint, 240),
     touchSupport: Boolean(req.body.touchSupport),
     connectionType: sanitizeString(req.body.connectionType, 40),
   };

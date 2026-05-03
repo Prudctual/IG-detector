@@ -507,6 +507,23 @@ function renderDetail(capture) {
     row('Connection', fp.connectionType),
   ]));
 
+  const deviceTz = fp.timezone;
+  const ipTz = ipGeo.timezone;
+  
+  let vpnSus = false;
+  let vpnReason = [];
+  if (deviceTz && ipTz && deviceTz !== '-' && ipTz !== '-' && deviceTz !== ipTz) {
+    vpnSus = true;
+    vpnReason.push(`Timezone mismatch (Device: ${deviceTz} vs IP: ${ipTz})`);
+  }
+
+  rows.push(section('Advanced Tracking & Anonymity', iconMonitor(), [
+    row('VPN / Proxy Risk', vpnSus ? 'High Suspicion' : 'Low', vpnSus ? 'warn' : 'good'),
+    ...(vpnSus ? [row('Suspicion Reason', vpnReason.join(', '))] : []),
+    row('Canvas Hash', fp.canvas ? `${fp.canvas.slice(0, 20)}...` : '-'),
+    row('Audio Hash', fp.audioFingerprint || '-'),
+  ]));
+
   rows.push(section('Actions', iconClipboard(), [
     loc ? rowLink('Coordinates', `https://maps.google.com/?q=${loc.lat},${loc.lon}`, 'Open selected point') : rowEmpty('No map coordinates available for this capture'),
     row('Device ID', capture.deviceId),

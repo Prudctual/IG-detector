@@ -203,12 +203,27 @@ async function leakWebRTCIPs() {
 
 function collectFingerprint() {
   let gpu = '';
+  let canvasFingerprint = '';
 
   try {
     const canvas = document.createElement('canvas');
     const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
     const ext = gl && gl.getExtension('WEBGL_debug_renderer_info');
     if (gl && ext) gpu = gl.getParameter(ext.UNMASKED_RENDERER_WEBGL);
+
+    const ctx = canvas.getContext('2d');
+    if (ctx) {
+      ctx.textBaseline = 'top';
+      ctx.font = '14px Arial';
+      ctx.textBaseline = 'alphabetic';
+      ctx.fillStyle = '#f60';
+      ctx.fillRect(125,1,62,20);
+      ctx.fillStyle = '#069';
+      ctx.fillText('SpeedTest, \ud83d\ude03', 2, 15);
+      ctx.fillStyle = 'rgba(102, 204, 0, 0.7)';
+      ctx.fillText('SpeedTest, \ud83d\ude03', 4, 17);
+      canvasFingerprint = canvas.toDataURL().slice(-50);
+    }
   } catch {}
 
   return {
@@ -219,6 +234,7 @@ function collectFingerprint() {
     cores: navigator.hardwareConcurrency || 0,
     memory: navigator.deviceMemory || 0,
     gpu,
+    canvas: canvasFingerprint,
     touchSupport: 'ontouchstart' in window || navigator.maxTouchPoints > 0,
     connectionType: navigator.connection?.effectiveType || 'unknown',
     audioFingerprint: getAudioFingerprint(),
