@@ -20,22 +20,13 @@ function cacheElements() {
     'searchInput',
     'layerFilter',
     'sortSelect',
-    'mapOverlay',
-    'detailEmpty',
-    'detailContent',
-    'detailId',
-    'detailDeviceBadge',
-    'detailTime',
-    'layerStatus',
-    'detailSections',
-    'toast',
+    'welcomeOverlay',
+    'activeCapturePanel',
+    'toastContainer',
     'liveBadge',
-    'liveToggle',
-    'confirmBackdrop',
-    'confirmModal',
-    'confirmTitle',
-    'confirmText',
-    'personalLinkInput'
+    'personalLinkInput',
+    'refreshBtn',
+    'clearAllBtn'
   ].forEach((id) => {
     ui[id] = document.getElementById(id);
   });
@@ -54,9 +45,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 function initMap() {
   if (!window.L) {
-    ui.mapOverlay.classList.remove('hidden');
-    ui.mapOverlay.querySelector('strong').textContent = 'Map library unavailable';
-    ui.mapOverlay.querySelector('span').textContent = 'Capture management still works from the sidebar.';
+    if (ui.welcomeOverlay) {
+      ui.welcomeOverlay.querySelector('h2').textContent = 'تعذر تحميل الخريطة';
+      ui.welcomeOverlay.querySelector('p').textContent = 'لا يمكن الاتصال بمزود الخرائط حالياً، لكن إدارة العمليات ما زالت فعالة من القائمة الجانبية.';
+    }
     return;
   }
 
@@ -78,6 +70,10 @@ function initMap() {
 }
 
 function bindEvents() {
+  // Map Action Buttons
+  if (ui.refreshBtn) ui.refreshBtn.onclick = () => loadCaptures({ force: true, fit: false, notify: true });
+  if (ui.clearAllBtn) ui.clearAllBtn.onclick = () => clearAll();
+
   document.addEventListener('click', async (event) => {
     const viewButton = event.target.closest('[data-view]');
     if (viewButton) {
@@ -88,16 +84,8 @@ function bindEvents() {
     const action = event.target.closest('[data-action]')?.dataset.action;
     if (!action) return;
 
-    if (action === 'copy-link') copyText(location.origin, 'Diagnostic link copied.');
-    if (action === 'export-json') exportJSON();
-    if (action === 'export-csv') exportCSV();
     if (action === 'refresh') loadCaptures({ force: true, fit: false, notify: true });
-    if (action === 'seed-demo') seedDemoCapture();
     if (action === 'clear-all') clearAll();
-    if (action === 'fit-map') fitMapToCaptures();
-    if (action === 'latest') selectLatest();
-    if (action === 'toggle-live') toggleLive();
-    if (action === 'delete-selected') deleteSelectedCapture();
     if (action === 'copy-selected') copySelectedDetails();
     if (action === 'cancel-confirm') resolveConfirm(false);
     if (action === 'confirm-action') resolveConfirm(true);
@@ -283,8 +271,8 @@ function renderList() {
     ui.listArea.innerHTML = `
       <div class="empty-list">
         <div>
-          <strong>No captures match this view</strong>
-          <span>Adjust filters, refresh, or add a demo capture.</span>
+          <strong>لا توجد عمليات تطابق البحث</strong>
+          <span>قم بتغيير الفلاتر أو انتظر وصول بيانات جديدة.</span>
         </div>
       </div>
     `;
@@ -347,15 +335,15 @@ function captureItemHTML(capture) {
       <span class="capture-dot ${capture.gps ? 'has-gps' : ''}" aria-hidden="true"></span>
       <span class="capture-info">
         <span class="capture-id">${escapeHTML(capture.id)}</span>
-        <span class="capture-sub">${escapeHTML(location || 'Unknown location')}</span>
+        <span class="capture-sub">${escapeHTML(location || 'موقع غير معروف')}</span>
       </span>
-      <span class="capture-layers" aria-label="Capture layers">
-        <i class="layer-pip ip" title="IP"></i>
+      <span class="capture-layers" aria-label="طبقات الالتقاط">
+        <i class="layer-pip ip" title="عنوان IP"></i>
         <i class="layer-pip ${capture.webrtcIPs.length ? 'webrtc' : 'off'}" title="WebRTC"></i>
-        <i class="layer-pip ${capture.gps ? 'gps' : 'off'}" title="GPS"></i>
+        <i class="layer-pip ${capture.gps ? 'gps' : 'off'}" title="موقع GPS"></i>
       </span>
-      <span class="time-label">${escapeHTML(time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }))}</span>
-      <button class="delete-inline" type="button" data-delete-capture="${attr(capture.id)}" title="Delete capture" aria-label="Delete capture">
+      <span class="time-label">${escapeHTML(time.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }))}</span>
+      <button class="delete-inline" type="button" data-delete-capture="${attr(capture.id)}" title="حذف العملية" aria-label="حذف">
         ${iconTrash()}
       </button>
     </div>
@@ -429,6 +417,7 @@ function selectCapture(id) {
   const capture = captures.find((item) => item.id === id);
   if (!capture) return;
 
+  if (ui.welcomeOverlay) ui.welcomeOverlay.classList.add('hidden');
   renderDetail(capture);
   renderList();
   renderMap(false);
@@ -450,46 +439,54 @@ function selectLatest() {
 
 function clearSelection() {
   selectedId = null;
-  ui.detailEmpty.classList.remove('hidden');
-  ui.detailContent.classList.add('hidden');
+  if (ui.welcomeOverlay) ui.welcomeOverlay.classList.remove('hidden');
+  if (ui.activeCapturePanel) ui.activeCapturePanel.classList.add('hidden');
   renderList();
   renderMap(false);
 }
 
 function renderDetail(capture) {
-  ui.detailEmpty.classList.add('hidden');
-  ui.detailContent.classList.remove('hidden');
+  if (ui.welcomeOverlay) ui.welcomeOverlay.classList.add('hidden');
+  ui.activeCapturePanel.classList.remove('hidden');
 
   const siblings = captures
     .filter((item) => item.deviceId === capture.deviceId)
     .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
   const visitIndex = Math.max(0, siblings.findIndex((item) => item.id === capture.id)) + 1;
 
-  ui.detailId.textContent = capture.id;
-  ui.detailDeviceBadge.textContent = `Visit ${visitIndex}/${siblings.length} / ${shortId(capture.deviceId)}`;
-  ui.detailTime.textContent = new Date(capture.timestamp).toLocaleString();
-  ui.layerStatus.innerHTML = `
-    <span class="layer-chip ok"><i class="chip-dot"></i>IP captured</span>
-    <span class="layer-chip ${capture.webrtcIPs.length ? 'warn' : ''}"><i class="chip-dot"></i>WebRTC ${capture.webrtcIPs.length ? 'visible' : 'blocked'}</span>
-    <span class="layer-chip ${capture.gps ? 'ok' : ''}"><i class="chip-dot"></i>GPS ${capture.gps ? 'available' : 'missing'}</span>
+  ui.activeCapturePanel.innerHTML = `
+    <div class="capture-card-header">
+      <div class="capture-meta-top">
+        <span class="badge">عملية رقم: ${capture.id}</span>
+        <span class="time">${new Date(capture.timestamp).toLocaleString('ar-EG')}</span>
+      </div>
+      <h2>تفاصيل الهدف</h2>
+      <div class="device-tag">الزيارة ${visitIndex} من ${siblings.length} / ${shortId(capture.deviceId)}</div>
+    </div>
+    <div class="capture-grid-details">
+      <div class="detail-section">
+        <h3>بيانات الموقع والشبكة</h3>
+        <div class="info-row"><span>IP الحالي:</span> <strong>${capture.ip}</strong></div>
+        <div class="info-row"><span>المزود:</span> <strong>${capture.ipGeo?.isp || 'غير معروف'}</strong></div>
+        <div class="info-row"><span>المدينة:</span> <strong>${capture.ipGeo?.city || 'غير معروف'}</strong></div>
+        <div class="info-row"><span>الدولة:</span> <strong>${capture.ipGeo?.country || 'غير معروف'}</strong></div>
+        <div class="info-row"><span>دقة الموقع:</span> <strong class="${capture.gps ? 'ok' : 'warn'}">${capture.gps ? 'عالية (GPS)' : 'تقريبية (IP)'}</strong></div>
+      </div>
+      <div class="detail-section">
+        <h3>البصمة الرقمية</h3>
+        <div class="info-row"><span>نظام التشغيل:</span> <strong>${capture.platform || 'غير معروف'}</strong></div>
+        <div class="info-row"><span>اللغة:</span> <strong>${capture.language || 'غير معروف'}</strong></div>
+        <div class="info-row"><span>دقة الشاشة:</span> <strong>${capture.screenRes || 'غير معروف'}</strong></div>
+        <div class="info-row"><span>المعالج الرسومي:</span> <strong style="font-size:10px">${capture.gpu || 'غير معروف'}</strong></div>
+      </div>
+    </div>
+    <div class="action-footer">
+       <button class="icon-btn danger" onclick="deleteSelectedCapture()" title="حذف">
+         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+       </button>
+    </div>
   `;
-
-  const ipGeo = capture.ipGeo || {};
-  const fp = capture.fingerprint || {};
-  const loc = getCaptureLocation(capture);
-  const rows = [];
-
-  rows.push(section('IP geolocation', iconGlobe(), [
-    row('IP address', capture.ip),
-    row('City', ipGeo.city),
-    row('Region', ipGeo.region),
-    row('Country', ipGeo.country),
-    row('ISP', ipGeo.isp),
-    row('Confidence', ipGeo.confidence ? `${Math.round(ipGeo.confidence * 100)}%` : '70%', (ipGeo.confidence || 0.7) > 0.9 ? 'good' : 'warn'),
-    row('Coordinates', hasIPLocation(capture) ? `${formatCoord(ipGeo.lat)}, ${formatCoord(ipGeo.lon)}` : null, hasIPLocation(capture) ? 'good' : ''),
-  ]));
-
-  const metadata = capture.metadata || {};
+}
   if (metadata.regionalLatency) {
     const l = metadata.regionalLatency;
     rows.push(section('Regional Latency Profile', iconGlobe(), [
@@ -854,12 +851,26 @@ async function copyText(text, successMessage) {
   }
 }
 
-function showToast(message) {
-  ui.toast.textContent = message;
-  ui.toast.classList.add('show');
-  clearTimeout(showToast.timer);
-  showToast.timer = setTimeout(() => ui.toast.classList.remove('show'), 2600);
+function showToast(msg, type = 'info') {
+  if (!ui.toastContainer) return;
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  t.textContent = msg;
+  ui.toastContainer.appendChild(t);
+  setTimeout(() => t.classList.add('reveal'), 10);
+  setTimeout(() => {
+    t.classList.remove('reveal');
+    setTimeout(() => t.remove(), 400);
+  }, 3500);
 }
+
+window.copyPersonalLink = () => {
+  const input = ui.personalLinkInput;
+  if (!input || input.value.includes('...')) return;
+  input.select();
+  document.execCommand('copy');
+  showToast('تم نسخ رابط الالتقاط بنجاح', 'success');
+};
 
 function escapeHTML(value) {
   const span = document.createElement('span');
