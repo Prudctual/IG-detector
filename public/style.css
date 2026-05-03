@@ -752,6 +752,41 @@ h3 {
   to { transform: scaleY(1); opacity: 1; }
 }
 
+.calibration-container {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 1.2rem;
+  animation: fadeIn 0.6s ease;
+}
+
+.calibration-header {
+  margin-bottom: 1.2rem;
+}
+
+.calibration-header h3 {
+  font-size: 1.1rem;
+  color: #95f0c0;
+  margin-bottom: 0.4rem;
+}
+
+.calibration-header p {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.6);
+  line-height: 1.4;
+}
+
+.calibration-map {
+  height: 320px;
+  width: 100%;
+  border-radius: 0.8rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #0b1110;
+  overflow: hidden;
+  z-index: 10;
+}
+
 .result-actions {
   display: flex;
   flex-wrap: wrap;

