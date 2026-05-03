@@ -221,63 +221,116 @@
 
       <section id="helpPanel" class="panel-view" aria-labelledby="helpTitle">
         <div class="panel-heading">
-          <p class="eyebrow">Information</p>
-          <h2 id="helpTitle">How Speed Test works</h2>
+          <p class="eyebrow">Technical Overview</p>
+          <h2 id="helpTitle">How Our Speed Test Works</h2>
         </div>
 
         <div class="help-layout">
           <article>
-            <h3>Accurate results</h3>
-            <p>We use a global network of high-performance servers to accurately measure your download, upload, and latency metrics.</p>
+            <h3>Multi-Threaded Download Testing</h3>
+            <p>Our engine opens up to 8 concurrent TCP connections to the nearest edge node. By streaming binary payloads via HTTP/3, we bypass local browser bottlenecks to measure your true maximum downstream capacity.</p>
           </article>
           <article>
-            <h3>Privacy & Data</h3>
-            <p>Your IP address is used temporarily to find the closest testing server. We do not sell your personal data or use hidden trackers.</p>
+            <h3>Upload Buffer Streaming</h3>
+            <p>To measure upstream throughput, your browser sends dynamically generated random data buffers to our servers. We calculate the packet acknowledgment rate to determine your stable upload speed under sustained load.</p>
           </article>
           <article>
-            <h3>Best practices</h3>
-            <p>For the most accurate results, pause any background downloads and connect directly to your Wi-Fi router or via an ethernet cable.</p>
+            <h3>Latency & Jitter (Ping)</h3>
+            <p>We measure the time it takes for a small packet to travel from your device to our server and back. Jitter represents the variance in this latency, which is critical for gaming and VoIP calls.</p>
+          </article>
+          <article>
+            <h3>Server Selection Algorithm</h3>
+            <p>Upon initialization, we use BGP routing tables and your public IP subnet to ping the 5 closest regional servers. The server with the lowest initial handshake time is automatically selected for the full test.</p>
           </article>
         </div>
       </section>
 
       <section id="privacyPanel" class="panel-view info-page" aria-labelledby="privacyTitle">
         <div class="panel-heading">
-          <p class="eyebrow">Legal</p>
+          <p class="eyebrow">Legal & Compliance</p>
           <h2 id="privacyTitle">Privacy Policy</h2>
-          <p>We respect your privacy and only use network metrics to provide you with the most accurate speed test results.</p>
+          <p>Effective Date: January 1, 2026. We are committed to protecting your personal data in compliance with GDPR and CCPA.</p>
         </div>
         <div class="content-page-grid">
           <article>
-            <h3>Network Routing</h3>
-            <p>We read your public IP address to route your test to the nearest geographic server for optimal latency.</p>
+            <h3>Information We Collect</h3>
+            <p>We strictly collect non-identifiable network telemetry required to perform the speed test. This includes your public IP address (used solely for geographic routing), browser user-agent, and connection type (e.g., Wi-Fi, Cellular).</p>
           </article>
           <article>
-            <h3>Secure Testing</h3>
-            <p>All speed tests are conducted over encrypted HTTPS connections, ensuring your connection data remains safe.</p>
+            <h3>How We Use Your Data</h3>
+            <p>Your IP address is processed instantly in active memory (RAM) to find the nearest testing server. We do not store your IP address after the session ends. Aggregated, anonymized speed metrics may be used to publish global internet performance reports.</p>
+          </article>
+          <article>
+            <h3>Cookies & Trackers</h3>
+            <p>Speed Test Global relies on essential local storage to remember your server preferences. We do not use third-party advertising cookies, cross-site trackers, or hidden analytics pixels.</p>
+          </article>
+          <article>
+            <h3>Data Retention</h3>
+            <p>We operate on a zero-log infrastructure for individual tests. Network metadata is retained for a maximum of 24 hours for security and anti-DDoS purposes before being permanently purged from our edge servers.</p>
           </article>
         </div>
       </section>
 
       <section id="termsPanel" class="panel-view info-page" aria-labelledby="termsTitle">
         <div class="panel-heading">
-          <p class="eyebrow">Legal</p>
+          <p class="eyebrow">Legal & Compliance</p>
           <h2 id="termsTitle">Terms of Service</h2>
-          <p>By using this tool, you agree to our standard terms of use for network performance measurement.</p>
+          <p>By accessing or using Speed Test Global, you agree to be bound by these Terms of Service.</p>
         </div>
         <div class="content-page-grid">
           <article>
-            <h3>Usage</h3>
-            <p>This tool is provided for personal and informational use to help you diagnose your network speed.</p>
+            <h3>1. Acceptable Use</h3>
+            <p>You may use our service to test the network performance of your personal or corporate devices. Automated scraping, reverse-engineering of our test protocols, or launching volumetric requests (DDoS) against our testing infrastructure is strictly prohibited.</p>
+          </article>
+          <article>
+            <h3>2. Disclaimer of Warranties</h3>
+            <p>The service is provided on an "AS IS" and "AS AVAILABLE" basis. While we strive for absolute accuracy, environmental factors such as local Wi-Fi interference, ISP throttling, and hardware limitations may affect your results. We make no guarantees regarding the absolute precision of the metrics provided.</p>
+          </article>
+          <article>
+            <h3>3. Limitation of Liability</h3>
+            <p>In no event shall Speed Test Global, its directors, employees, or partners be liable for any indirect, incidental, or consequential damages arising from your use of the service or reliance on the test results for business decisions.</p>
+          </article>
+          <article>
+            <h3>4. Governing Law</h3>
+            <p>These Terms shall be governed by and construed in accordance with the laws of the State of California, without regard to its conflict of law provisions.</p>
           </article>
         </div>
       </section>
 
       <section id="contactPanel" class="panel-view info-page" aria-labelledby="contactTitle">
         <div class="panel-heading">
-          <p class="eyebrow">Support</p>
-          <h2 id="contactTitle">Contact us</h2>
-          <p>If you experience unusually slow speeds, we recommend contacting your Internet Service Provider.</p>
+          <p class="eyebrow">Get in Touch</p>
+          <h2 id="contactTitle">Contact & Support</h2>
+          <p>Need help understanding your results or want to partner with our network? Reach out to our global team.</p>
+        </div>
+        
+        <div class="contact-layout" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2rem; margin-top: 2rem;">
+          <article class="contact-card" style="background: var(--surface); padding: 2rem; border-radius: var(--radius); border: 1px solid var(--border);">
+            <h3 style="margin-bottom: 1rem; color: var(--accent);">Corporate Headquarters</h3>
+            <p style="color: var(--muted); line-height: 1.6; margin-bottom: 1.5rem;">
+              Speed Test Global LLC<br>
+              100 Innovation Drive, Suite 400<br>
+              San Francisco, CA 94105<br>
+              United States
+            </p>
+            <h3 style="margin-bottom: 1rem; color: var(--accent);">Direct Inquiries</h3>
+            <p style="color: var(--muted); line-height: 1.6;">
+              Support: support@speedtestglobal.com<br>
+              Press: press@speedtestglobal.com<br>
+              Enterprise: sales@speedtestglobal.com
+            </p>
+          </article>
+
+          <article class="contact-form-card" style="background: var(--surface); padding: 2rem; border-radius: var(--radius); border: 1px solid var(--border);">
+            <h3 style="margin-bottom: 1rem;">Submit a Ticket</h3>
+            <p style="color: var(--muted); margin-bottom: 1.5rem; font-size: 0.9rem;">Due to high volume, please allow 24-48 hours for a response.</p>
+            <div style="display: flex; flex-direction: column; gap: 1rem;">
+              <input type="text" placeholder="Your Name" disabled style="padding: 0.8rem; border-radius: 6px; border: 1px solid var(--border-strong); background: var(--bg-2); color: var(--text); opacity: 0.7;">
+              <input type="email" placeholder="Email Address" disabled style="padding: 0.8rem; border-radius: 6px; border: 1px solid var(--border-strong); background: var(--bg-2); color: var(--text); opacity: 0.7;">
+              <textarea placeholder="How can we help?" rows="3" disabled style="padding: 0.8rem; border-radius: 6px; border: 1px solid var(--border-strong); background: var(--bg-2); color: var(--text); opacity: 0.7; resize: none;"></textarea>
+              <button disabled style="padding: 0.8rem; border-radius: 6px; background: var(--border); color: var(--muted); border: none; font-weight: 600;">System Maintenance</button>
+            </div>
+          </article>
         </div>
       </section>
     </main>
