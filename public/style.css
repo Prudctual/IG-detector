@@ -242,13 +242,13 @@ svg {
   font-family: var(--mono);
   font-size: 0.76rem;
   font-weight: 700;
+  letter-spacing: 0;
 }
 
 h1,
 h2,
 h3 {
   line-height: 1.04;
-  letter-spacing: 0;
   text-wrap: balance;
 }
 
@@ -398,7 +398,7 @@ h3 {
   font-family: var(--sans);
   font-weight: 500;
   font-size: 1.4rem;
-  letter-spacing: 2px;
+  letter-spacing: 0;
   text-transform: uppercase;
 }
 
@@ -1915,7 +1915,7 @@ h3 {
   font-size: 0.72rem;
   text-transform: uppercase;
   color: var(--faint);
-  letter-spacing: 0.15em;
+  letter-spacing: 0;
   margin: 1.2rem 0 1.5rem;
   display: flex;
   align-items: center;
@@ -1962,7 +1962,7 @@ h3 {
   font-size: 10px;
   text-transform: uppercase;
   color: var(--faint);
-  letter-spacing: 0.2em;
+  letter-spacing: 0;
   margin-bottom: 32px;
 }
 
@@ -2069,7 +2069,7 @@ h3 {
   color: var(--text);
   font-size: 13px;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
+  letter-spacing: 0;
   margin-bottom: 24px;
 }
 
