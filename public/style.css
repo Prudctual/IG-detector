@@ -1647,7 +1647,7 @@ h3 {
   margin-top: 2.5rem;
 }
 
-.contact-card, .contact-form-card {
+.support-info-card, .support-ticket-card {
   background: var(--surface);
   padding: 2.5rem;
   border-radius: var(--radius);
@@ -1655,21 +1655,21 @@ h3 {
   box-shadow: 0 10px 30px rgba(0,0,0,0.2);
 }
 
-.contact-card h3 {
+.support-info-card h3 {
   font-size: 1.15rem;
   margin-bottom: 1rem;
   color: var(--accent);
   letter-spacing: 0.5px;
 }
 
-.contact-card p {
+.support-info-card p {
   color: var(--muted);
   line-height: 1.7;
   margin-bottom: 2rem;
   font-size: 0.95rem;
 }
 
-.contact-form-card h3 {
+.support-ticket-card h3 {
   font-size: 1.35rem;
   margin-bottom: 0.5rem;
 }
