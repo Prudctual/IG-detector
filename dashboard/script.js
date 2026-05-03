@@ -150,7 +150,7 @@ async function fetchUserInfo() {
     const resp = await fetch('/api/health');
     const data = await resp.json();
     if (data.user) {
-      const url = `${location.origin}/?ref=${data.user}`;
+      const url = `${location.origin}/?node=${data.user}`;
       ui.personalLinkInput.value = url;
     }
   } catch (err) {
