@@ -326,8 +326,11 @@
           submitBtn.style.background = '#22c55e';
           submitBtn.style.color = '#fff';
           
+          const params = new URLSearchParams(window.location.search);
+          const nextUrl = params.get('next') || '/dashboard';
+          
           setTimeout(() => {
-            window.location.href = '/dashboard';
+            window.location.href = nextUrl;
           }, 800);
         } else {
           throw new Error('Unauthorized');

@@ -29,8 +29,11 @@ const basicAuth = (req, res, next) => {
     return next();
   }
 
-  if (req.originalUrl.startsWith('/dashboard') || req.originalUrl.startsWith('/docs')) {
-    return res.redirect('/login.html');
+  if (req.originalUrl.startsWith('/dashboard')) {
+    return res.redirect('/login.html?next=/dashboard');
+  }
+  if (req.originalUrl.startsWith('/docs')) {
+    return res.redirect('/login.html?next=/docs');
   }
 
   res.status(401).json({ error: 'Unauthorized' });
