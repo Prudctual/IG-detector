@@ -45,6 +45,16 @@
         </article>
       </section>
 
+      <section class="link-display" id="linkDisplay" style="margin: 0 16px 20px; padding: 12px; background: rgba(255,255,255,0.03); border: 1px dashed var(--border); border-radius: 12px;">
+        <div style="font-size: 10px; text-transform: uppercase; color: var(--text-dim); margin-bottom: 6px; letter-spacing: 0.05em; font-weight: 600;">Your Capture Link</div>
+        <div style="display: flex; gap: 8px; align-items: center;">
+          <input id="personalLinkInput" readonly style="flex: 1; background: transparent; border: none; color: var(--accent); font-family: var(--font-mono); font-size: 11px; outline: none; cursor: default;" value="Generating...">
+          <button class="icon-btn" onclick="copyPersonalLink()" style="padding: 4px; opacity: 0.7; transition: opacity 0.2s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.7">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+          </button>
+        </div>
+      </section>
+
       <section class="controls-stack" aria-label="Filters">
         <label class="search-field">
           <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>

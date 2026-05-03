@@ -29,6 +29,8 @@ const basicAuth = (req, res, next) => {
   }));
 
   if (VALID_TOKENS.includes(cookies.session_token)) {
+    const decoded = Buffer.from(cookies.session_token, 'base64').toString('ascii');
+    req.adminUser = decoded.split(':')[0];
     return next();
   }
 
@@ -267,6 +269,7 @@ function createCapture(req, captures, extra = {}) {
     gps: sanitizeGps(extra.gps || req.body.gps),
     fingerprint,
     visitCount: previousVisits.length + 1,
+    owner: extra.owner || req.body.owner || 'Jassim99x'
   };
 }
 
@@ -301,7 +304,7 @@ app.post('/api/capture', async (req, res) => {
   res.json({ status: 'ok', id: entry.id });
 });
 
-app.post('/api/demo-capture', async (req, res) => {
+app.post('/api/demo-capture', basicAuth, async (req, res) => {
   const captures = await readCaptures();
   const now = Date.now();
   const demoDeviceId = `demo_${crypto.randomBytes(4).toString('hex')}`;
@@ -347,6 +350,7 @@ app.post('/api/demo-capture', async (req, res) => {
       connectionType: Math.random() > 0.5 ? '4g' : 'wifi',
     },
     visitCount: 1,
+    owner: req.adminUser // Tag demo as belonging to the current admin
   });
 
   captures.push(entry);
@@ -375,33 +379,41 @@ app.patch('/api/capture/:id', async (req, res) => {
 });
 
 app.get('/api/captures', basicAuth, async (req, res) => {
-  res.json(await readCaptures());
+  const all = await readCaptures();
+  const filtered = all.filter(c => c.owner === req.adminUser);
+  res.json(filtered);
 });
 
 app.delete('/api/captures', basicAuth, async (req, res) => {
-  await writeCaptures([]);
+  const all = await readCaptures();
+  const otherAdminsData = all.filter(c => c.owner !== req.adminUser);
+  await writeCaptures(otherAdminsData);
   broadcast('refresh');
-  res.json({ status: 'cleared' });
+  res.json({ status: 'cleared', deleted: all.length - otherAdminsData.length });
 });
 
 app.delete('/api/captures/:id', basicAuth, async (req, res) => {
-  const before = await readCaptures();
-  const captures = before.filter((capture) => capture.id !== req.params.id);
-  await writeCaptures(captures);
+  const all = await readCaptures();
+  const capture = all.find(c => c.id === req.params.id);
+  
+  if (!capture || capture.owner !== req.adminUser) {
+    return res.status(403).json({ error: 'Access denied' });
+  }
 
-  if (captures.length === before.length) return res.json({ status: 'already_deleted' });
+  const filtered = all.filter((c) => c.id !== req.params.id);
+  await writeCaptures(filtered);
   broadcast('refresh');
-  res.json({ status: 'deleted', deleted: before.length - captures.length });
+  res.json({ status: 'deleted' });
 });
 
 app.delete('/api/devices/:deviceId', basicAuth, async (req, res) => {
-  const before = await readCaptures();
-  const captures = before.filter((capture) => capture.deviceId !== req.params.deviceId);
-  await writeCaptures(captures);
+  const all = await readCaptures();
+  // Only delete captures for this device that belong to the current admin
+  const filtered = all.filter((c) => !(c.deviceId === req.params.deviceId && c.owner === req.adminUser));
+  await writeCaptures(filtered);
 
-  if (captures.length === before.length) return res.json({ status: 'already_deleted' });
   broadcast('refresh');
-  res.json({ status: 'deleted', deleted: before.length - captures.length });
+  res.json({ status: 'deleted', deleted: all.length - filtered.length });
 });
 
 app.use((req, res) => {
