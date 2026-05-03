@@ -98,7 +98,6 @@ function initMotionTracking() {
       gamma: event.gamma,
       t: Date.now()
     });
-    });
     if (motionData.gyro.length > 50) motionData.gyro.shift();
   });
 }
