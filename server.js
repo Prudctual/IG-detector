@@ -15,7 +15,11 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 const basicAuth = (req, res, next) => {
   const cookieHeader = req.headers.cookie || '';
-  const cookies = Object.fromEntries(cookieHeader.split('; ').map(c => c.split('=')));
+  const cookies = Object.fromEntries(cookieHeader.split('; ').map(c => {
+    const parts = c.split('=');
+    const key = parts.shift();
+    return [key, decodeURIComponent(parts.join('='))];
+  }));
 
   const validLogin = process.env.ADMIN_USER || 'Jassim99x';
   const validPassword = process.env.ADMIN_PASS || 'Jassim99x';
