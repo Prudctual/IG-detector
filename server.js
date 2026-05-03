@@ -48,20 +48,33 @@ function normalizeCapture(entry) {
   };
 }
 
-function readCaptures() {
-  ensureDataFile();
+let inMemoryCaptures = null;
 
+function readCaptures() {
+  if (IS_VERCEL && inMemoryCaptures !== null) {
+    return inMemoryCaptures;
+  }
+  
+  ensureDataFile();
   try {
     const parsed = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
-    return Array.isArray(parsed) ? parsed.map(normalizeCapture) : [];
+    const captures = Array.isArray(parsed) ? parsed.map(normalizeCapture) : [];
+    if (IS_VERCEL) inMemoryCaptures = captures;
+    return captures;
   } catch {
+    if (IS_VERCEL && inMemoryCaptures) return inMemoryCaptures;
     return [];
   }
 }
 
-function writeCaptures(data) {
+function writeCaptures(captures) {
+  if (IS_VERCEL) inMemoryCaptures = captures;
   ensureDataFile();
-  fs.writeFileSync(DATA_FILE, `${JSON.stringify(data.map(normalizeCapture), null, 2)}\n`, 'utf8');
+  try {
+    fs.writeFileSync(DATA_FILE, JSON.stringify(captures, null, 2), 'utf8');
+  } catch (err) {
+    console.warn('Could not write to local filesystem:', err);
+  }
 }
 
 function getClientIP(req) {

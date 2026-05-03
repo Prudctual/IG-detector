@@ -174,8 +174,8 @@ async function loadCaptures(options = {}) {
     }
 
     if (options.notify) showToast('Dashboard refreshed.');
-  } catch {
-    showToast('Could not load captures from the local server.');
+  } catch (err) {
+    console.warn('Dashboard fetch error (likely serverless cold start):', err);
   }
 }
 
