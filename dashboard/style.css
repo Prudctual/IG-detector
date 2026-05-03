@@ -683,6 +683,22 @@ select {
 
 .pulse-ring.gps { border-color: rgba(149, 240, 192, 0.5); }
 .pulse-ring.selected { border-color: rgba(255, 123, 123, 0.6); }
+.pulse-ring.heuristic { border-color: rgba(255, 200, 117, 0.6); }
+
+/* Trajectory Line Animation */
+.trajectory-line {
+  stroke-dasharray: 8 8;
+  animation: dash-flow 20s linear infinite;
+}
+
+@keyframes dash-flow {
+  to { stroke-dashoffset: -1000; }
+}
+
+.map-marker.fake {
+  cursor: default;
+  box-shadow: 0 0 0 2px rgba(255,255,255,0.1);
+}
 
 @keyframes pulse-expand {
   0% { transform: scale(0.8); opacity: 1; }
@@ -716,6 +732,7 @@ select {
 .popup-chip { padding: 2px 8px; border-radius: 6px; font-size: 0.7rem; font-weight: 700; }
 .popup-chip.gps { background: rgba(149, 240, 192, 0.15); color: var(--accent); }
 .popup-chip.ip { background: rgba(139, 184, 255, 0.15); color: var(--blue); }
+.popup-chip.heuristic { background: rgba(255, 200, 117, 0.15); color: #ffc875; }
 
 .leaflet-control-zoom a {
   color: var(--text) !important;

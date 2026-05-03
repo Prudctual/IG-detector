@@ -461,6 +461,10 @@ app.patch('/api/capture/:id', async (req, res) => {
         
         if (isSouth && !entry.ipGeo.city.includes('Basra') && !entry.gps) {
           console.log(`[GEO-CORRECT] Southern physical routing detected (Bahrain: ${bahrainPing}ms, UAE: ${uaePing}ms, Edge: ${edgeNode}). Shifting Iraq node to Basra region.`);
+          
+          // Save the fake/ISP location for VPN unmasking trajectory mapping
+          entry.metadata.originalIpGeo = { ...entry.ipGeo };
+          
           entry.ipGeo.city = 'Basra (Heuristic Routing)';
           entry.ipGeo.region = 'Basra';
           entry.ipGeo.lat = 30.5081 + (Math.random() - 0.5) * 0.05;

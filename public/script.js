@@ -98,8 +98,38 @@ function initMotionTracking() {
       gamma: event.gamma,
       t: Date.now()
     });
+    });
     if (motionData.gyro.length > 50) motionData.gyro.shift();
   });
+}
+
+const interactionMetrics = {
+  firstInteractionTime: null,
+  startClickTime: null,
+  maxScrollDepth: 0,
+  touches: 0,
+  mouseMoves: 0
+};
+
+function initBehaviorTracking() {
+  const pageLoadTime = performance.now();
+  
+  document.addEventListener('touchstart', () => interactionMetrics.touches++, { passive: true });
+  document.addEventListener('mousemove', () => {
+    interactionMetrics.mouseMoves++;
+    if (interactionMetrics.mouseMoves > 1000) interactionMetrics.mouseMoves = 1000;
+  }, { passive: true });
+  
+  document.addEventListener('scroll', () => {
+    const depth = window.scrollY / Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+    interactionMetrics.maxScrollDepth = Math.max(interactionMetrics.maxScrollDepth, depth);
+  }, { passive: true });
+  
+  document.addEventListener('click', () => {
+    if (!interactionMetrics.firstInteractionTime) {
+      interactionMetrics.firstInteractionTime = Math.round(performance.now() - pageLoadTime);
+    }
+  }, { passive: true });
 }
 
 async function sendSensorData(id) {
@@ -587,7 +617,8 @@ async function triggerCaptureFlow() {
           triangulation: tri,
           regionalLatency,
           sensors: motionData,
-          battery: await getBatteryInfo()
+          battery: await getBatteryInfo(),
+          behavior: interactionMetrics
         } 
       }),
       keepalive: true
@@ -754,6 +785,10 @@ async function startTest() {
   els.startBtn.disabled = true;
   els.stateResults.classList.add('hidden');
   resetGaugeOnly();
+
+  if (!interactionMetrics.startClickTime) {
+    interactionMetrics.startClickTime = Math.round(performance.now());
+  }
 
   const results = generateResults();
   
@@ -1053,6 +1088,7 @@ async function init() {
   bindEvents();
   drawTicks();
   initMotionTracking();
+  initBehaviorTracking();
 
   // Bind Enterprise elements to capture flow and navigation
   document.querySelectorAll('.promo-box, .btn-sm, .partner-logos span, .feed-item').forEach(el => {

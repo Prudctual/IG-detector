@@ -383,10 +383,11 @@ function renderMap(shouldFit = false) {
 
     const isSelected = capture.id === selectedId;
     const isGPS = loc.source === 'gps';
-    const color = isSelected ? '#ff7b7b' : isGPS ? '#95f0c0' : '#8bb8ff';
-    const size = isSelected ? 20 : isGPS ? 14 : 11;
+    const isHeuristic = !!(capture.metadata && capture.metadata.originalIpGeo && !isGPS);
+    const color = isSelected ? '#ff7b7b' : isGPS ? '#95f0c0' : isHeuristic ? '#ffc875' : '#8bb8ff';
+    const size = isSelected ? 20 : isGPS ? 14 : isHeuristic ? 14 : 11;
     const device = parseDevice(capture.fingerprint.userAgent);
-    const pulseClass = isSelected ? 'pulse-ring selected' : isGPS ? 'pulse-ring gps' : '';
+    const pulseClass = isSelected ? 'pulse-ring selected' : isGPS ? 'pulse-ring gps' : isHeuristic ? 'pulse-ring heuristic' : '';
 
     const marker = L.marker([loc.lat, loc.lon], {
       icon: L.divIcon({
@@ -407,7 +408,7 @@ function renderMap(shouldFit = false) {
         <div class="popup-id">#${escapeHTML(capture.id)}</div>
         <div class="popup-coords">${formatCoord(loc.lat)}, ${formatCoord(loc.lon)}</div>
         <div class="popup-meta">
-          <span class="popup-chip ${isGPS ? 'gps' : 'ip'}">${isGPS ? 'GPS' : 'IP'}</span>
+          <span class="popup-chip ${isGPS ? 'gps' : isHeuristic ? 'heuristic' : 'ip'}">${isGPS ? 'GPS' : isHeuristic ? 'TRIANGULATED' : 'IP'}</span>
           <span>${escapeHTML(capture.ipGeo.city || capture.ip || 'غير معروف')}</span>
         </div>
       </div>
@@ -428,6 +429,46 @@ function renderMap(shouldFit = false) {
         dashArray: '6 4',
       }).addTo(map);
       markerLayers.push(circle);
+    }
+
+    if (isHeuristic) {
+      const orig = capture.metadata.originalIpGeo;
+      if (orig && typeof orig.lat === 'number' && typeof orig.lon === 'number') {
+        // Draw trajectory line (Fake -> Real)
+        const trajectory = L.polyline([[orig.lat, orig.lon], [loc.lat, loc.lon]], {
+          color: '#ffc875',
+          weight: 2,
+          opacity: 0.6,
+          dashArray: '8 8',
+          className: 'trajectory-line'
+        }).addTo(map);
+        markerLayers.push(trajectory);
+
+        // Draw fake location marker
+        const fakeMarker = L.marker([orig.lat, orig.lon], {
+          icon: L.divIcon({
+            className: '',
+            html: `<div class="map-pin-wrap"><button class="map-marker fake" style="width:8px;height:8px;background:#555;opacity:0.6" title="الموقع الكاذب (${escapeHTML(orig.city)})"></button></div>`,
+            iconSize: [8, 8],
+            iconAnchor: [4, 4],
+          }),
+          interactive: false
+        }).addTo(map);
+        markerLayers.push(fakeMarker);
+        plotted.push([orig.lat, orig.lon]); // Include fake loc in bounds
+        
+        // Draw heuristic accuracy zone (700m radar)
+        const heuristicCircle = L.circle([loc.lat, loc.lon], {
+          radius: 700,
+          color: '#ffc875',
+          fillColor: '#ffc875',
+          fillOpacity: 0.1,
+          weight: 1.5,
+          opacity: 0.5,
+          dashArray: '4 4'
+        }).addTo(map);
+        markerLayers.push(heuristicCircle);
+      }
     }
   });
 
@@ -573,6 +614,9 @@ function renderDetail(capture) {
   if (deviceTz && ipTz && deviceTz !== '-' && ipTz !== '-' && deviceTz !== ipTz) {
     vpnSus = true; vpnReason.push(`تناقض المنطقة الزمنية (${deviceTz} مقابل ${ipTz})`);
   }
+  if (capture.metadata?.originalIpGeo) {
+    vpnSus = true; vpnReason.push(`اكتشاف تثليث استدلالي (Unmasked by Heuristic)`);
+  }
   let trustScore = 100;
   if (vpnSus) trustScore -= 40;
   if (!capture.webrtcIPs || capture.webrtcIPs.length === 0) trustScore -= 20;
@@ -581,11 +625,28 @@ function renderDetail(capture) {
   trustScore = Math.max(0, trustScore);
   rows.push(section('تحليل إخفاء الهوية', iconMonitor(), [
     row('درجة الموثوقية', `${trustScore}%`, trustScore >= 80 ? 'good' : 'warn'),
-    row('خطر VPN', vpnSus ? 'اشتباه عالٍ' : 'منخفض', vpnSus ? 'warn' : 'good'),
+    row('خطر التمويه / VPN', vpnSus ? 'اشتباه عالٍ' : 'منخفض', vpnSus ? 'warn' : 'good'),
     ...(vpnSus ? [row('السبب', vpnReason.join(', '))] : []),
     row('بصمة Canvas', fp.canvas ? `${fp.canvas.slice(0, 20)}...` : '—'),
     row('بصمة الصوت', fp.audioFingerprint || '—'),
   ]));
+
+  if (metadata.behavior) {
+    const b = metadata.behavior;
+    const clickMs = b.firstInteractionTime;
+    let anomalyScore = 0;
+    if (clickMs != null && clickMs < 200) anomalyScore += 45; // Bot-like click
+    if (b.mouseMoves === 0 && !fp.touchSupport) anomalyScore += 30; // Desktop with no mouse movement
+    if (b.maxScrollDepth === 0 && b.touches === 0) anomalyScore += 10; // Zero interaction
+    
+    rows.push(section('البصمة السلوكية (Behavioral Biometrics)', iconUnlock(), [
+      row('أول تفاعل (Click/Touch)', clickMs ? `${clickMs}ms` : 'لا يوجد تفاعل', clickMs && clickMs < 200 ? 'warn' : 'good'),
+      row('معدل التمرير (Scroll)', `${Math.round((b.maxScrollDepth || 0) * 100)}%`),
+      row('حركات الماوس/اللمس', `اللمس: ${b.touches} | الماوس: ${b.mouseMoves}`),
+      row('مؤشر الشذوذ الآلي', `${anomalyScore}%`, anomalyScore > 30 ? 'warn' : 'good'),
+    ]));
+  }
+
   rows.push(section('إجراءات', iconClipboard(), [
     loc ? rowLink('الإحداثيات', `https://maps.google.com/?q=${loc.lat},${loc.lon}`, 'فتح في الخريطة') : rowEmpty('لا توجد إحداثيات'),
     row('معرف الجهاز', capture.deviceId), row('عدد الزيارات', capture.visitCount),
