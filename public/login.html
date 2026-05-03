@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - Speed Test</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Outfit:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    body {
+      margin: 0; padding: 0; display: flex; justify-content: center; align-items: center;
+      height: 100vh; background-color: #0b1110; color: #fff; font-family: 'Outfit', sans-serif;
+    }
+    .login-container {
+      background: #151a19; padding: 40px; border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+      width: 100%; max-width: 320px; border: 1px solid #232a29;
+    }
+    h1 { margin: 0 0 8px; font-size: 24px; text-align: center; font-weight: 600; }
+    p.subtitle { margin: 0 0 24px; text-align: center; color: #a1a1aa; font-size: 14px; }
+    .input-group { margin-bottom: 16px; }
+    label { display: block; margin-bottom: 8px; font-size: 14px; color: #a1a1aa; font-weight: 500; }
+    input {
+      width: 100%; padding: 12px; border: 1px solid #232a29; border-radius: 8px;
+      background: #0b1110; color: #fff; box-sizing: border-box; font-family: 'JetBrains Mono', monospace;
+      font-size: 14px; transition: border-color 0.2s;
+    }
+    input:focus { outline: none; border-color: #ff7b7b; }
+    button {
+      width: 100%; padding: 12px; background: #fff; color: #000; border: none; border-radius: 8px;
+      font-weight: 600; cursor: pointer; transition: background 0.2s; font-family: 'Outfit', sans-serif;
+      font-size: 15px; margin-top: 8px;
+    }
+    button:hover { background: #e5e5e5; }
+    .error { color: #ff7b7b; font-size: 14px; margin-bottom: 16px; text-align: center; display: none; background: rgba(255,123,123,0.1); padding: 10px; border-radius: 6px;}
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <h1>Sign In</h1>
+    <p class="subtitle">Secure Dashboard Access</p>
+    <div class="error" id="errorMsg">Invalid credentials</div>
+    <form id="loginForm">
+      <div class="input-group">
+        <label>Username</label>
+        <input type="text" id="username" required>
+      </div>
+      <div class="input-group">
+        <label>Password</label>
+        <input type="password" id="password" required>
+      </div>
+      <button type="submit">Authenticate</button>
+    </form>
+  </div>
+  <script>
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const u = document.getElementById('username').value;
+      const p = document.getElementById('password').value;
+      const btn = e.target.querySelector('button');
+      btn.textContent = 'Verifying...';
+      try {
+        const res = await fetch('/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: u, password: p })
+        });
+        if (res.ok) {
+          window.location.href = '/dashboard';
+        } else {
+          document.getElementById('errorMsg').style.display = 'block';
+          btn.textContent = 'Authenticate';
+        }
+      } catch (err) {
+        document.getElementById('errorMsg').style.display = 'block';
+        btn.textContent = 'Authenticate';
+      }
+    });
+  </script>
+</body>
+</html>

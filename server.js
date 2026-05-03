@@ -14,19 +14,42 @@ app.use(express.json({ limit: '128kb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 
 const basicAuth = (req, res, next) => {
-  const b64auth = (req.headers.authorization || '').split(' ')[1] || '';
-  const [login, password] = Buffer.from(b64auth, 'base64').toString().split(':');
+  const cookieHeader = req.headers.cookie || '';
+  const cookies = Object.fromEntries(cookieHeader.split('; ').map(c => c.split('=')));
 
   const validLogin = process.env.ADMIN_USER || 'Jassim99x';
   const validPassword = process.env.ADMIN_PASS || 'Jassim99x';
+  const validToken = Buffer.from(`${validLogin}:${validPassword}`).toString('base64');
 
-  if (login && password && login === validLogin && password === validPassword) {
+  if (cookies.session_token === validToken) {
     return next();
   }
 
-  res.set('WWW-Authenticate', 'Basic realm="Secure Area"');
-  res.status(401).send('Authentication required.');
+  if (req.originalUrl.startsWith('/dashboard')) {
+    return res.redirect('/login.html');
+  }
+
+  res.status(401).json({ error: 'Unauthorized' });
 };
+
+app.post('/api/login', (req, res) => {
+  const { username, password } = req.body || {};
+  const validLogin = process.env.ADMIN_USER || 'Jassim99x';
+  const validPassword = process.env.ADMIN_PASS || 'Jassim99x';
+
+  if (username === validLogin && password === validPassword) {
+    const token = Buffer.from(`${validLogin}:${validPassword}`).toString('base64');
+    res.cookie('session_token', token, { httpOnly: true, path: '/' });
+    res.json({ status: 'ok' });
+  } else {
+    res.status(401).json({ error: 'Invalid credentials' });
+  }
+});
+
+app.get('/api/logout', (req, res) => {
+  res.clearCookie('session_token', { path: '/' });
+  res.redirect('/login.html');
+});
 
 app.use('/dashboard', basicAuth, express.static(path.join(__dirname, 'dashboard')));
 
