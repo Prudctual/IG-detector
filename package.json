@@ -1,0 +1,13 @@
+{
+  "name": "ig-detector",
+  "version": "1.0.0",
+  "description": "Geolocation Security Research PoC — Educational Use Only",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.21.0"
+  }
+}

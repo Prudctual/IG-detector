@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IG-Detector — dashboard</title>
+  <meta name="description" content="Local diagnostic dashboard for consent-based network and location capture sessions.">
+  <meta name="theme-color" content="#0b1110">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='18' fill='%230b1110'/%3E%3Ccircle cx='50' cy='50' r='25' fill='%23ff7b7b'/%3E%3C/svg%3E">
+</head>
+<body>
+  <div class="dashboard-shell">
+    <aside class="sidebar" aria-label="Capture controls">
+      <header class="sidebar-header">
+        <a class="brand" href="/" target="_blank" rel="noreferrer" aria-label="Open diagnostic page">
+          <span class="brand-dot" aria-hidden="true"></span>
+          <span>
+            <strong>IG-Detector</strong>
+            <small>Local research dashboard</small>
+          </span>
+        </a>
+        <span class="live-badge" id="liveBadge">Live</span>
+      </header>
+
+      <section class="stats-row" aria-label="Stats">
+        <article class="stat-card">
+          <strong id="totalCaptures">0</strong>
+          <span>Captures</span>
+        </article>
+        <article class="stat-card">
+          <strong id="gpsCount">0</strong>
+          <span>GPS</span>
+        </article>
+        <article class="stat-card">
+          <strong id="deviceCount">0</strong>
+          <span>Devices</span>
+        </article>
+      </section>
+
+      <section class="controls-stack" aria-label="Filters">
+        <label class="search-field">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+          <input id="searchInput" type="search" placeholder="Search ID, IP, city, device">
+        </label>
+
+        <div class="control-grid">
+          <label>
+            <span>Layer</span>
+            <select id="layerFilter">
+              <option value="all">All captures</option>
+              <option value="gps">GPS only</option>
+              <option value="ip">IP only</option>
+              <option value="webrtc">WebRTC leak</option>
+              <option value="nogps">No GPS</option>
+            </select>
+          </label>
+          <label>
+            <span>Sort</span>
+            <select id="sortSelect">
+              <option value="newest">Newest first</option>
+              <option value="oldest">Oldest first</option>
+              <option value="gps-accuracy">GPS accuracy</option>
+              <option value="visits">Visit count</option>
+            </select>
+          </label>
+        </div>
+      </section>
+
+      <section class="view-toggle" aria-label="List view">
+        <button class="toggle-btn active" type="button" data-view="devices">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="11" rx="2"/><path d="M9 20h6M12 16v4"/></svg>
+          Devices
+        </button>
+        <button class="toggle-btn" type="button" data-view="all">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>
+          All
+        </button>
+      </section>
+
+      <section class="list-area" id="listArea" aria-label="Capture list"></section>
+
+      <footer class="sidebar-footer">
+        <button class="foot-btn" type="button" data-action="copy-link" title="Copy diagnostic link" aria-label="Copy diagnostic link">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.1 0l2-2a5 5 0 0 0-7.1-7.1l-1.2 1.2"/><path d="M14 11a5 5 0 0 0-7.1 0l-2 2A5 5 0 0 0 12 20.1l1.2-1.2"/></svg>
+        </button>
+        <button class="foot-btn" type="button" data-action="export-json" title="Export JSON" aria-label="Export JSON">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5M12 15V3"/></svg>
+        </button>
+        <button class="foot-btn" type="button" data-action="export-csv" title="Export CSV" aria-label="Export CSV">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg>
+        </button>
+        <button class="foot-btn" type="button" data-action="refresh" title="Refresh" aria-label="Refresh">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 4v6h-6"/></svg>
+        </button>
+        <button class="foot-btn" type="button" data-action="seed-demo" title="Add demo capture" aria-label="Add demo capture">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+        </button>
+        <button class="foot-btn danger" type="button" data-action="clear-all" title="Clear all" aria-label="Clear all">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+        </button>
+      </footer>
+    </aside>
+
+    <main class="main-grid">
+      <section class="map-panel" aria-label="Capture map">
+        <div id="map" role="application" aria-label="Map"></div>
+        <div class="map-overlay" id="mapOverlay">
+          <div class="empty-state">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 1 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            <strong>Waiting for captures</strong>
+            <span>Run the main page with diagnostic logging, or add a demo row.</span>
+          </div>
+        </div>
+
+        <div class="map-tools" aria-label="Map controls">
+          <button type="button" data-action="fit-map">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3H5a2 2 0 0 0-2 2v3M21 8V5a2 2 0 0 0-2-2h-3M16 21h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+            Fit
+          </button>
+          <button type="button" data-action="latest">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8v5l3 2"/><circle cx="12" cy="12" r="9"/></svg>
+            Latest
+          </button>
+          <button type="button" data-action="toggle-live" id="liveToggle">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4v16M18 4v16"/></svg>
+            Pause
+          </button>
+        </div>
+
+        <div class="map-legend">
+          <span><i class="legend-dot gps"></i>GPS</span>
+          <span><i class="legend-dot ip"></i>IP</span>
+          <span><i class="legend-dot selected"></i>Selected</span>
+        </div>
+      </section>
+
+      <aside class="detail-panel" aria-label="Capture detail">
+        <div class="detail-empty" id="detailEmpty">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+          <strong>Select a capture</strong>
+          <span>Details, coordinates and device fingerprint will appear here.</span>
+        </div>
+
+        <div class="detail-content hidden" id="detailContent">
+          <header class="detail-top">
+            <div>
+              <p class="detail-label">Selected capture</p>
+              <h1 id="detailId">—</h1>
+              <span class="detail-device-badge" id="detailDeviceBadge">—</span>
+            </div>
+            <div class="detail-actions">
+              <button class="icon-btn" type="button" data-action="copy-selected" title="Copy details" aria-label="Copy details">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              </button>
+              <button class="icon-btn danger" type="button" data-action="delete-selected" title="Delete capture" aria-label="Delete capture">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+              </button>
+            </div>
+          </header>
+
+          <div class="detail-time" id="detailTime">—</div>
+          <div class="layer-status" id="layerStatus"></div>
+          <div class="detail-sections" id="detailSections"></div>
+        </div>
+      </aside>
+    </main>
+  </div>
+
+  <div class="confirm-backdrop hidden" id="confirmBackdrop"></div>
+  <section class="confirm-modal hidden" id="confirmModal" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
+    <h2 id="confirmTitle">Confirm action</h2>
+    <p id="confirmText">—</p>
+    <div class="confirm-actions">
+      <button class="modal-btn" type="button" data-action="cancel-confirm">Cancel</button>
+      <button class="modal-btn danger" type="button" data-action="confirm-action">Confirm</button>
+    </div>
+  </section>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

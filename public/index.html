@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NetPulse — network diagnostics</title>
+  <meta name="description" content="Run a browser-based network diagnostic with download, upload, latency and optional diagnostic logging for educational research.">
+  <meta property="og:title" content="NetPulse network diagnostics">
+  <meta property="og:description" content="Measure connection quality and run diagnostic sessions for educational research.">
+  <meta name="theme-color" content="#0b1110">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Noto+Kufi+Arabic:wght@400;500;600;700&family=Sora:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='18' fill='%230b1110'/%3E%3Cpath d='M24 60h16l7-30 9 48 7-28h13' fill='none' stroke='%2395f0c0' stroke-width='7' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <div class="grid-overlay" aria-hidden="true"></div>
+
+  <div class="app-shell">
+    <header class="site-header">
+      <a class="brand" href="/" aria-label="NetPulse home">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 28 28" role="img">
+            <path d="M4 16h7l3-12 4 21 3-11h3" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </span>
+        <span>
+          <strong>NetPulse</strong>
+          <small>Diagnostics lab</small>
+        </span>
+      </a>
+
+      <nav class="site-nav" aria-label="Primary">
+        <button class="nav-item active" type="button" data-panel="speedPanel">Speed test</button>
+        <button class="nav-item" type="button" data-panel="toolsPanel">Network tools</button>
+        <button class="nav-item" type="button" data-panel="helpPanel">Help</button>
+      </nav>
+
+    </header>
+
+    <main class="main" id="main">
+      <section id="speedPanel" class="panel-view active" aria-labelledby="speedTitle">
+        <h1 class="sr-only" id="speedTitle">Run network speed test</h1>
+
+        <div id="stateIdle" class="state-card scan-card">
+          <div class="scan-header">
+            <div>
+              <p class="eyebrow">Live connection test</p>
+              <h2>Start scan</h2>
+            </div>
+            <span class="scan-pill" id="captureModePill">Logging active</span>
+          </div>
+
+          <div class="gauge-wrap" aria-live="polite">
+            <svg class="gauge-svg" viewBox="0 0 400 230" role="img" aria-label="Speed gauge">
+              <defs>
+                <filter id="glow"><feGaussianBlur stdDeviation="3" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+              </defs>
+              <g id="tickMarks" opacity="0.35"></g>
+              <path d="M 50 200 A 150 150 0 0 1 350 200" fill="none" stroke="rgba(255,255,255,0.11)" stroke-width="10" stroke-linecap="round"/>
+              <path id="activeArc" d="M 50 200 A 150 150 0 0 1 350 200" fill="none" stroke="#95f0c0" stroke-width="10" stroke-linecap="round" stroke-dasharray="471" stroke-dashoffset="471" filter="url(#glow)"/>
+              <line id="needle" x1="200" y1="200" x2="200" y2="74" stroke="rgba(244,248,240,0.85)" stroke-width="2" stroke-linecap="round" opacity="0" filter="url(#glow)"/>
+              <circle cx="200" cy="200" r="7" fill="#101817" stroke="rgba(255,255,255,0.24)" stroke-width="1"/>
+              <text id="speedNum" x="200" y="154" text-anchor="middle" fill="#f5f7ef" font-size="62" font-weight="800" font-family="Outfit, sans-serif">0</text>
+              <text id="speedUnit" x="200" y="183" text-anchor="middle" fill="rgba(245,247,239,0.54)" font-size="14" font-weight="600" font-family="JetBrains Mono, monospace">Mbps</text>
+              <text id="phaseLabel" x="200" y="220" text-anchor="middle" fill="rgba(245,247,239,0.44)" font-size="11" font-weight="600" font-family="JetBrains Mono, monospace"></text>
+            </svg>
+          </div>
+
+          <div class="test-controls">
+            <button id="startBtn" class="start-btn" type="button" data-action="start-test">
+              <span class="start-ring" aria-hidden="true"></span>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><polygon points="7 4 19 12 7 20 7 4"/></svg>
+              <span>Go</span>
+            </button>
+
+            <label class="consent-card" for="diagnosticConsent">
+              <span class="switch">
+                <input id="diagnosticConsent" type="checkbox" checked>
+                <span class="switch-ui" aria-hidden="true"></span>
+              </span>
+              <span>
+                <strong>Save diagnostic data</strong>
+                <small>Stores the browser profile and network data locally. GPS is added only after browser permission.</small>
+              </span>
+            </label>
+          </div>
+
+          <div class="server-status" id="serverStatus">
+            <span class="status-dot" aria-hidden="true"></span>
+            <span id="statusText">Checking local server...</span>
+          </div>
+        </div>
+
+        <section id="stateResults" class="results-panel hidden" aria-label="Speed test results">
+          <div class="results-hero">
+            <article class="metric-card">
+              <span class="metric-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 5v14M19 12l-7 7-7-7"/></svg></span>
+              <strong id="resDown">—</strong>
+              <small>Download Mbps</small>
+            </article>
+            <article class="metric-card">
+              <span class="metric-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></svg></span>
+              <strong id="resUp">—</strong>
+              <small>Upload Mbps</small>
+            </article>
+            <article class="metric-card">
+              <span class="metric-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2"/></svg></span>
+              <strong id="resPing">—</strong>
+              <small>Ping ms</small>
+            </article>
+            <article class="metric-card">
+              <span class="metric-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg></span>
+              <strong id="resJitter">—</strong>
+              <small>Jitter ms</small>
+            </article>
+          </div>
+
+          <div class="details-grid">
+            <article class="detail-card grade-card">
+              <div class="grade-ring">
+                <svg viewBox="0 0 100 100" aria-hidden="true">
+                  <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="7"/>
+                  <circle id="gradeCircle" cx="50" cy="50" r="42" fill="none" stroke="#95f0c0" stroke-width="5" stroke-linecap="round" stroke-dasharray="264" stroke-dashoffset="264" transform="rotate(-90 50 50)"/>
+                </svg>
+                <span id="gradeLetter">—</span>
+              </div>
+              <div>
+                <small>Speed grade</small>
+                <strong id="gradeDesc">—</strong>
+              </div>
+            </article>
+            <article class="detail-card">
+              <small>Test server</small>
+              <strong id="resServer">—</strong>
+            </article>
+            <article class="detail-card">
+              <small>Your network</small>
+              <strong id="resISP">—</strong>
+            </article>
+            <article class="detail-card">
+              <small>Connection</small>
+              <strong id="resConn">—</strong>
+            </article>
+          </div>
+
+          <div class="latency-section">
+            <div class="section-title-row">
+              <strong>Latency distribution</strong>
+              <span id="latencyAvg">—</span>
+            </div>
+            <div class="latency-bars" id="latencyBars"></div>
+          </div>
+
+          <div class="diagnostic-report">
+            <div class="section-title-row">
+              <strong>Detailed diagnosis</strong>
+              <span id="resultSummary">—</span>
+            </div>
+            <div class="report-grid">
+              <article>
+                <small>Streaming</small>
+                <strong id="insightStreaming">—</strong>
+              </article>
+              <article>
+                <small>Gaming</small>
+                <strong id="insightGaming">—</strong>
+              </article>
+              <article>
+                <small>Upload work</small>
+                <strong id="insightUpload">—</strong>
+              </article>
+              <article>
+                <small>Stability</small>
+                <strong id="insightStability">—</strong>
+              </article>
+            </div>
+          </div>
+
+          <div class="result-actions">
+            <button class="action-btn primary-btn" type="button" data-action="reset-test">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 4v6h-6"/></svg>
+              Test again
+            </button>
+            <button class="action-btn" type="button" data-action="share-results">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg>
+              Share
+            </button>
+          </div>
+        </section>
+      </section>
+
+      <section id="toolsPanel" class="panel-view" aria-labelledby="toolsTitle">
+        <div class="panel-heading">
+          <p class="eyebrow">Operational tools</p>
+          <h2 id="toolsTitle">Quick checks for the current browser session</h2>
+        </div>
+
+        <div class="tool-grid">
+          <article class="tool-card">
+            <div class="tool-head">
+              <span class="tool-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 12h4l3-7 4 14 3-7h2"/></svg></span>
+              <div>
+                <strong>Latency probe</strong>
+                <small>Runs a short local timing sample.</small>
+              </div>
+            </div>
+            <div class="tool-value" id="toolPing">—</div>
+            <button class="action-btn primary-btn" type="button" data-action="run-ping">Run probe</button>
+          </article>
+
+          <article class="tool-card">
+            <div class="tool-head">
+              <span class="tool-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 2v20M5 8h14M5 16h14"/></svg></span>
+              <div>
+                <strong>Client profile</strong>
+                <small>Reads what this browser reports.</small>
+              </div>
+            </div>
+            <dl class="tool-list" id="clientProfile">
+              <div><dt>IP</dt><dd>—</dd></div>
+              <div><dt>Timezone</dt><dd>—</dd></div>
+              <div><dt>Screen</dt><dd>—</dd></div>
+            </dl>
+            <button class="action-btn" type="button" data-action="refresh-client">Refresh</button>
+          </article>
+
+          <article class="tool-card">
+            <div class="tool-head">
+              <span class="tool-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 9h8M8 13h8M8 17h5"/></svg></span>
+              <div>
+                <strong>Session report</strong>
+                <small>Copies a clean summary for handoff.</small>
+              </div>
+            </div>
+            <p class="tool-copy">Includes latest measured speed, browser profile and whether diagnostic logging is enabled.</p>
+            <button class="action-btn" type="button" data-action="copy-report">Copy report</button>
+          </article>
+
+          <article class="tool-card">
+            <div class="tool-head">
+              <span class="tool-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.1 0l2-2a5 5 0 0 0-7.1-7.1l-1.2 1.2"/><path d="M14 11a5 5 0 0 0-7.1 0l-2 2A5 5 0 0 0 12 20.1l1.2-1.2"/></svg></span>
+              <div>
+                <strong>Shareable link</strong>
+                <small>Copies the local diagnostic URL.</small>
+              </div>
+            </div>
+            <code id="shareLink">http://localhost:3000</code>
+            <button class="action-btn" type="button" data-action="copy-link">Copy link</button>
+          </article>
+        </div>
+      </section>
+
+      <section id="helpPanel" class="panel-view" aria-labelledby="helpTitle">
+        <div class="panel-heading">
+          <p class="eyebrow">Use it cleanly</p>
+          <h2 id="helpTitle">How this diagnostic page works</h2>
+        </div>
+
+        <div class="help-layout">
+          <article>
+            <h3>Speed measurement</h3>
+            <p>The page simulates browser-side throughput, ping and jitter so the diagnostic workflow can be tested without a paid speed-test backend.</p>
+          </article>
+          <article>
+            <h3>Diagnostic logging</h3>
+            <p>Logging is optional. When enabled, the tool stores browser fingerprint data, connection metadata, WebRTC candidates when exposed, and browser location only if the user grants permission.</p>
+          </article>
+          <article>
+            <h3>Data management</h3>
+            <p>Diagnostic sessions can be filtered, inspected, mapped, and exported as JSON or CSV. Individual captures and full device groups can be removed.</p>
+          </article>
+        </div>
+      </section>
+
+      <section id="privacyPanel" class="panel-view info-page" aria-labelledby="privacyTitle">
+        <div class="panel-heading">
+          <p class="eyebrow">Privacy</p>
+          <h2 id="privacyTitle">What gets stored</h2>
+          <p>The scanner can save diagnostic runs locally. GPS is never added unless the browser permission prompt is accepted.</p>
+        </div>
+        <div class="content-page-grid">
+          <article>
+            <h3>Stored locally</h3>
+            <p>Capture ID, timestamp, device ID, IP metadata, browser fingerprint, WebRTC candidates when visible, and optional GPS coordinates.</p>
+          </article>
+          <article>
+            <h3>Control</h3>
+            <p>You can delete one capture, delete a whole device group, clear all records, and export JSON or CSV.</p>
+          </article>
+          <article>
+            <h3>Scope</h3>
+            <p>This build is for consent-based diagnostics and local research. The data file is stored in this project workspace.</p>
+          </article>
+        </div>
+      </section>
+
+      <section id="termsPanel" class="panel-view info-page" aria-labelledby="termsTitle">
+        <div class="panel-heading">
+          <p class="eyebrow">Terms</p>
+          <h2 id="termsTitle">Use this scanner with consent</h2>
+          <p>Do not use the project as a hidden tracker. It is built for local diagnostics, training, and controlled research sessions.</p>
+        </div>
+        <div class="content-page-grid">
+          <article>
+            <h3>Allowed use</h3>
+            <p>Testing your own browser, devices you administer, or sessions where the participant understands what is recorded.</p>
+          </article>
+          <article>
+            <h3>Operator duty</h3>
+            <p>Keep diagnostic data private, remove old records, and explain location prompts clearly before collecting GPS data.</p>
+          </article>
+          <article>
+            <h3>Data handling</h3>
+            <p>Export only the records you need. Delete demo rows and stale diagnostic runs after testing.</p>
+          </article>
+        </div>
+      </section>
+
+      <section id="contactPanel" class="panel-view info-page" aria-labelledby="contactTitle">
+        <div class="panel-heading">
+          <p class="eyebrow">Contact</p>
+          <h2 id="contactTitle">Local project operator</h2>
+          <p>Use the session report and data exports when you need to hand off a diagnostic result.</p>
+        </div>
+        <div class="contact-card">
+          <div>
+            <small>Diagnostic URL</small>
+            <strong id="contactUrl">—</strong>
+          </div>
+          <button class="action-btn primary-btn" type="button" data-action="copy-link">Copy URL</button>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <span>© 2026 NetPulse Diagnostics Lab</span>
+      <button type="button" data-panel="privacyPanel">Privacy</button>
+      <button type="button" data-panel="termsPanel">Terms</button>
+      <button type="button" data-panel="contactPanel">Contact</button>
+    </footer>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="script.js"></script>
+</body>
+</html>
