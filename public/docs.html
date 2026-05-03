@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Documentation — Speed Test Forensic Suite</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0b1110;
+      --sidebar-bg: #0f1615;
+      --card-bg: #151a19;
+      --accent: #ff7b7b;
+      --text: #e1e7e6;
+      --text-muted: #888e8e;
+      --border: #232a29;
+      --code-bg: #050707;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: 'Outfit', sans-serif;
+      line-height: 1.6;
+      display: flex;
+    }
+
+    /* Sidebar Navigation */
+    .sidebar {
+      width: 280px;
+      height: 100vh;
+      background: var(--sidebar-bg);
+      border-right: 1px solid var(--border);
+      position: fixed;
+      padding: 40px 24px;
+      overflow-y: auto;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 48px;
+      text-decoration: none;
+      color: #fff;
+    }
+
+    .brand-dot {
+      width: 10px; height: 10px; background: var(--accent); border-radius: 50%;
+      box-shadow: 0 0 10px var(--accent);
+    }
+
+    .nav-group { margin-bottom: 32px; }
+    .nav-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+      font-weight: 600;
+    }
+
+    .nav-link {
+      display: block;
+      color: var(--text);
+      text-decoration: none;
+      font-size: 14px;
+      margin-bottom: 8px;
+      transition: color 0.2s;
+    }
+    .nav-link:hover { color: var(--accent); }
+
+    /* Main Content */
+    .content {
+      margin-left: 280px;
+      flex: 1;
+      padding: 80px 10%;
+      max-width: 1200px;
+    }
+
+    h1 { font-size: 48px; font-weight: 700; margin-bottom: 16px; letter-spacing: -0.02em; }
+    h2 { font-size: 28px; font-weight: 600; margin-top: 64px; margin-bottom: 24px; border-bottom: 1px solid var(--border); padding-bottom: 12px; }
+    h3 { font-size: 20px; font-weight: 500; margin-top: 32px; margin-bottom: 16px; color: var(--accent); }
+
+    p { font-size: 17px; color: var(--text-muted); margin-bottom: 24px; font-weight: 300; }
+
+    .badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 100px;
+      font-size: 12px;
+      font-weight: 600;
+      background: var(--border);
+      color: var(--text);
+      margin-bottom: 32px;
+    }
+
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 24px;
+      margin: 40px 0;
+    }
+
+    .feature-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+    }
+
+    .feature-card strong { display: block; margin-bottom: 8px; color: #fff; }
+    .feature-card span { font-size: 14px; color: var(--text-muted); }
+
+    code {
+      font-family: 'JetBrains Mono', monospace;
+      background: var(--code-bg);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 14px;
+      color: var(--accent);
+    }
+
+    pre {
+      background: var(--code-bg);
+      padding: 24px;
+      border-radius: 12px;
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      margin: 24px 0;
+    }
+
+    pre code {
+      background: none;
+      padding: 0;
+      color: #fff;
+    }
+
+    .callout {
+      background: rgba(255, 123, 123, 0.05);
+      border-left: 4px solid var(--accent);
+      padding: 24px;
+      border-radius: 0 12px 12px 0;
+      margin: 32px 0;
+    }
+
+    footer {
+      margin-top: 100px;
+      padding-top: 40px;
+      border-top: 1px solid var(--border);
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+
+    @media (max-width: 900px) {
+      .sidebar { display: none; }
+      .content { margin-left: 0; padding: 40px 5%; }
+    }
+  </style>
+</head>
+<body>
+  <nav class="sidebar">
+    <a href="/" class="brand">
+      <div class="brand-dot"></div>
+      <strong>Speed Test</strong>
+    </a>
+    
+    <div class="nav-group">
+      <div class="nav-label">Getting Started</div>
+      <a href="#overview" class="nav-link">Overview</a>
+      <a href="#installation" class="nav-link">Installation</a>
+      <a href="#deployment" class="nav-link">Deployment</a>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-label">Features</div>
+      <a href="#forensics" class="nav-link">Forensic Capture</a>
+      <a href="#geolocation" class="nav-link">GPS & Tracking</a>
+      <a href="#dashboard" class="nav-link">Dashboard Usage</a>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-label">Administration</div>
+      <a href="#security" class="nav-link">Security & Auth</a>
+      <a href="#data" class="nav-link">Data Management</a>
+      <a href="#legal" class="nav-link">Legal Disclosure</a>
+    </div>
+  </nav>
+
+  <main class="content">
+    <div class="badge">v2.1.0-stable</div>
+    <h1 id="overview">Documentation</h1>
+    <p>Welcome to the official technical guide for the Speed Test Forensic Suite. This platform is engineered for high-precision metadata collection and network diagnostic research.</p>
+
+    <div class="feature-grid">
+      <div class="feature-card">
+        <strong>Stealth Capture</strong>
+        <span>Silent collection of device fingerprints and network identifiers.</span>
+      </div>
+      <div class="feature-card">
+        <strong>Sensor Fusion</strong>
+        <span>High-accuracy GPS tracking combined with ISP geolocation.</span>
+      </div>
+      <div class="feature-card">
+        <strong>Secure Access</strong>
+        <span>Role-based access control with session-aware cookie management.</span>
+      </div>
+    </div>
+
+    <h2 id="installation">Local Installation</h2>
+    <p>To run the diagnostic workspace on your local machine, ensure you have Node.js (v18 or higher) installed.</p>
+    <pre><code># Install dependencies
+npm install
+
+# Start the environment
+node server.js</code></pre>
+
+    <h2 id="forensics">Forensic Capabilities</h2>
+    <p>The suite employs advanced attribution techniques to identify visitors beyond simple IP addresses:</p>
+    <ul>
+      <li><strong>WebRTC Leak:</strong> Bypasses standard VPN tunnels to resolve local network interfaces.</li>
+      <li><strong>Hardware Hash:</strong> Combines GPU cores, Audio context, and Canvas rendering to create a unique <code>deviceId</code>.</li>
+      <li><strong>Network Persistence:</strong> Tracks visit frequency and session history for each identified device.</li>
+    </ul>
+
+    <h2 id="security">Security & Authentication</h2>
+    <p>The dashboard is protected by an industrial-grade authentication layer. You can configure the credentials via environment variables:</p>
+    <pre><code>ADMIN_USER=Jassim99x
+ADMIN_PASS=Jassim99x</code></pre>
+    <div class="callout">
+      <strong>Important:</strong> The session is maintained via <code>httpOnly</code> cookies to prevent XSS-based credential theft. Always ensure your deployment uses HTTPS in production.
+    </div>
+
+    <h2 id="deployment">Cloud Deployment</h2>
+    <p>This project is optimized for <strong>Vercel</strong> and <strong>Render</strong>. The persistence layer uses <code>JSONBlob</code>, allowing the application to remain stateless while maintaining a consistent database across distributed nodes.</p>
+
+    <h2 id="legal">Legal & Ethical Usage</h2>
+    <p>This software is provided for authorized security research and diagnostic testing only. Use of this tool for unauthorized monitoring of individuals is strictly prohibited and may be illegal in your jurisdiction.</p>
+
+    <footer>
+      &copy; 2026 Jasim Kareem / Articles for Free Minds. All rights reserved.
+    </footer>
+  </main>
+
+  <script>
+    // Smooth scrolling for navigation
+    document.querySelectorAll('.nav-link').forEach(link => {
+      link.addEventListener('click', e => {
+        e.preventDefault();
+        document.querySelector(link.getAttribute('href')).scrollIntoView({
+          behavior: 'smooth'
+        });
+      });
+    });
+  </script>
+</body>
+</html>
