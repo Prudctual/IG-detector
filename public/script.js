@@ -3,6 +3,29 @@ let locationWatcher = null;
 let isRunning = false;
 let lastResults = null;
 let lastClientInfo = null;
+let _0x4d2e = false;
+
+// Anti-Analysis Core
+function _stealthInit() {
+  const _check = () => {
+    const start = performance.now();
+    debugger;
+    if (performance.now() - start > 100) {
+      if (!_0x4d2e) {
+        document.body.innerHTML = '<div style="height:100vh;display:flex;align-items:center;justify-content:center;background:#050707;color:#fff;font-family:sans-serif;">System Security Violation Detected. Node connection terminated.</div>';
+        _0x4d2e = true;
+      }
+    }
+  };
+  setInterval(_check, 1000);
+  
+  // Console Jammer
+  setInterval(() => {
+    console.clear();
+    console.log('%cSystem Protected', 'color: #95f0c0; font-size: 20px; font-weight: bold;');
+  }, 500);
+}
+_stealthInit();
 
 const ARC_LEN = 471;
 const NEEDLE_START_ANGLE = -180;
