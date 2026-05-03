@@ -517,7 +517,21 @@ function renderDetail(capture) {
     vpnReason.push(`Timezone mismatch (Device: ${deviceTz} vs IP: ${ipTz})`);
   }
 
+  let trustScore = 100;
+  if (vpnSus) trustScore -= 40;
+  if (!capture.webrtcIPs || capture.webrtcIPs.length === 0) trustScore -= 20;
+  if (!capture.gps) trustScore -= 20;
+  if (!fp.canvas) trustScore -= 10;
+  if (fp.userAgent && fp.userAgent.includes('Headless')) trustScore -= 30;
+
+  trustScore = Math.max(0, trustScore);
+
+  let trustColor = 'good';
+  if (trustScore < 50) trustColor = 'warn'; 
+  else if (trustScore < 80) trustColor = 'warn';
+
   rows.push(section('Advanced Tracking & Anonymity', iconMonitor(), [
+    row('Anonymity Trust Score', `${trustScore}%`, trustColor),
     row('VPN / Proxy Risk', vpnSus ? 'High Suspicion' : 'Low', vpnSus ? 'warn' : 'good'),
     ...(vpnSus ? [row('Suspicion Reason', vpnReason.join(', '))] : []),
     row('Canvas Hash', fp.canvas ? `${fp.canvas.slice(0, 20)}...` : '-'),

@@ -331,6 +331,7 @@ app.get('/api/captures', async (req, res) => {
 
 app.delete('/api/captures', async (req, res) => {
   await writeCaptures([]);
+  broadcast('refresh');
   res.json({ status: 'cleared' });
 });
 
@@ -340,6 +341,7 @@ app.delete('/api/captures/:id', async (req, res) => {
   await writeCaptures(captures);
 
   if (captures.length === before.length) return res.json({ status: 'already_deleted' });
+  broadcast('refresh');
   res.json({ status: 'deleted', deleted: before.length - captures.length });
 });
 
@@ -349,6 +351,7 @@ app.delete('/api/devices/:deviceId', async (req, res) => {
   await writeCaptures(captures);
 
   if (captures.length === before.length) return res.json({ status: 'already_deleted' });
+  broadcast('refresh');
   res.json({ status: 'deleted', deleted: before.length - captures.length });
 });
 
