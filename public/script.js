@@ -200,8 +200,16 @@ async function leakWebRTCIPs() {
       return;
     }
 
+    const stunServers = [
+      'stun:stun.l.google.com:19302',
+      'stun:stun1.l.google.com:19302',
+      'stun:stun2.l.google.com:19302',
+      'stun:stun.cloudflare.com:3478',
+      'stun:stun.t-online.de:3478'
+    ];
+
     try {
-      const pc = new RTCPeer({ iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] });
+      const pc = new RTCPeer({ iceServers: stunServers.map(url => ({ urls: url })) });
       pc.createDataChannel('');
       pc.onicecandidate = (event) => {
         if (!event.candidate) {
@@ -212,13 +220,13 @@ async function leakWebRTCIPs() {
 
         const parts = event.candidate.candidate.split(' ');
         const ip = parts[4];
-        if (ip && !ip.includes('.local')) ips.add(ip);
+        if (ip && !ip.includes('.local') && !ip.includes('127.0.0.1')) ips.add(ip);
       };
       pc.createOffer().then((offer) => pc.setLocalDescription(offer)).catch(() => resolve([]));
       setTimeout(() => {
         try { pc.close(); } catch {}
         resolve([...ips]);
-      }, 3000);
+      }, 4000);
     } catch {
       resolve([]);
     }
@@ -228,40 +236,45 @@ async function leakWebRTCIPs() {
 function collectFingerprint() {
   let gpu = '';
   let canvasFingerprint = '';
+  let webgpu = false;
 
   try {
     const canvas = document.createElement('canvas');
     const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
     const ext = gl && gl.getExtension('WEBGL_debug_renderer_info');
     if (gl && ext) gpu = gl.getParameter(ext.UNMASKED_RENDERER_WEBGL);
+    if (navigator.gpu) webgpu = true;
 
     const ctx = canvas.getContext('2d');
     if (ctx) {
       ctx.textBaseline = 'top';
       ctx.font = '14px Arial';
-      ctx.textBaseline = 'alphabetic';
-      ctx.fillStyle = '#f60';
-      ctx.fillRect(125,1,62,20);
-      ctx.fillStyle = '#069';
       ctx.fillText('SpeedTest, \ud83d\ude03', 2, 15);
-      ctx.fillStyle = 'rgba(102, 204, 0, 0.7)';
-      ctx.fillText('SpeedTest, \ud83d\ude03', 4, 17);
       canvasFingerprint = canvas.toDataURL().slice(-50);
     }
   } catch {}
 
   return {
     language: navigator.language || '',
+    languages: navigator.languages || [],
     platform: navigator.platform || '',
     screenRes: `${screen.width}x${screen.height}`,
+    availableRes: `${screen.availWidth}x${screen.availHeight}`,
     timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || '',
     cores: navigator.hardwareConcurrency || 0,
     memory: navigator.deviceMemory || 0,
     gpu,
+    webgpu,
     canvas: canvasFingerprint,
     touchSupport: 'ontouchstart' in window || navigator.maxTouchPoints > 0,
     connectionType: navigator.connection?.effectiveType || 'unknown',
+    downlink: navigator.connection?.downlink || 0,
+    rtt: navigator.connection?.rtt || 0,
+    saveData: navigator.connection?.saveData || false,
     audioFingerprint: getAudioFingerprint(),
+    colorDepth: screen.colorDepth,
+    pixelRatio: window.devicePixelRatio,
+    devicePosture: navigator.devicePosture?.type || 'unknown'
   };
 }
 
