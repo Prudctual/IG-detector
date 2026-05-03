@@ -484,15 +484,26 @@ function renderDetail(capture) {
   const loc = getCaptureLocation(capture);
   const metadata = capture.metadata || {};
   const rows = [];
-  rows.push(section('الموقع الجغرافي (IP)', iconGlobe(), [
+  const geoRows = [
     row('عنوان IP', capture.ip), 
     row('المدينة', ipGeo.city, ipGeo.city?.includes('Verified') || ipGeo.city?.includes('Heuristic') ? 'good' : ''), 
     row('المنطقة', ipGeo.region),
     row('الدولة', ipGeo.country), 
     row('المزود', ipGeo.isp),
     row('الثقة', ipGeo.confidence ? `${Math.round(ipGeo.confidence * 100)}%` : (hasIPLocation(capture) ? '70%' : '0%'), ipGeo.confidence > 0.9 ? 'good' : ''),
-    row('الإحداثيات', hasIPLocation(capture) ? `${formatCoord(ipGeo.lat)}, ${formatCoord(ipGeo.lon)}` : null),
-  ]));
+  ];
+
+  if (ipGeo.edgeTrace && ipGeo.edgeTrace.colo) {
+    geoRows.push(row('العقدة الطرفية (Edge Node)', `${ipGeo.edgeTrace.colo} (${ipGeo.edgeTrace.loc})`, 'warn'));
+    if (ipGeo.edgeTrace.warp === 'on') {
+      geoRows.push(row('حالة WARP VPN', 'مكتشف (Cloudflare)', 'warn'));
+    }
+  }
+
+  geoRows.push(row('الإحداثيات', hasIPLocation(capture) ? `${formatCoord(ipGeo.lat)}, ${formatCoord(ipGeo.lon)}` : null));
+  
+  rows.push(section('الموقع الجغرافي (IP + Edge)', iconGlobe(), geoRows));
+
   if (metadata.regionalLatency) {
     const l = metadata.regionalLatency;
     rows.push(section('بصمة التأخير الإقليمي', iconGlobe(), [

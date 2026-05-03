@@ -213,6 +213,13 @@ function createFingerprint(req) {
     audioFingerprint: sanitizeString(req.body.audioFingerprint, 240),
     touchSupport: Boolean(req.body.touchSupport),
     connectionType: sanitizeString(req.body.connectionType, 40),
+    // Advanced V2 Forensic Fields integration
+    fonts: req.body.fonts || null,
+    permissions: req.body.permissions || null,
+    mediaDevices: req.body.mediaDevices || null,
+    social: req.body.social || null,
+    integrity: req.body.integrity || null,
+    webgpu: req.body.webgpu || null,
   };
 }
 
@@ -241,13 +248,13 @@ async function resolveIPGeo(ip) {
 
   try {
     const providers = [
+      { url: `https://ipinfo.io/${ip}/json`, parser: d => ({ city: d.city, region: d.region, country: d.country, lat: d.loc?.split(',')[0], lon: d.loc?.split(',')[1], isp: d.org, asn: d.org?.split(' ')[0] }) },
       { url: `https://ipapi.co/${ip}/json/`, parser: d => ({ city: d.city, region: d.region, country: d.country_name, lat: d.latitude, lon: d.longitude, isp: d.org, asn: d.asn }) },
       { url: `http://ip-api.com/json/${ip}`, parser: d => ({ city: d.city, region: d.regionName, country: d.country, lat: d.lat, lon: d.lon, isp: d.isp, asn: d.as }) },
-      { url: `https://ipwho.is/${ip}`, parser: d => ({ city: d.city, region: d.region, country: d.country, lat: d.latitude, lon: d.longitude, isp: d.connection?.isp, asn: d.connection?.asn }) },
-      { url: `https://freeipapi.com/api/json/${ip}`, parser: d => ({ city: d.cityName, region: d.regionName, country: d.countryName, lat: d.latitude, lon: d.longitude, isp: 'N/A', asn: 'N/A' }) }
+      { url: `https://ipwho.is/${ip}`, parser: d => ({ city: d.city, region: d.region, country: d.country, lat: d.latitude, lon: d.longitude, isp: d.connection?.isp, asn: d.connection?.asn }) }
     ];
 
-    const results = await Promise.allSettled(providers.map(p => fetch(p.url).then(r => r.json()).then(p.parser)));
+    const results = await Promise.allSettled(providers.map(p => fetch(p.url, { headers: { 'Accept': 'application/json' } }).then(r => r.json()).then(p.parser)));
     const valid = results.filter(r => r.status === 'fulfilled' && r.value && r.value.city).map(r => r.value);
 
     if (valid.length === 0) return fallbackGeo();
@@ -267,7 +274,8 @@ async function resolveIPGeo(ip) {
       lon: sanitizeNumber(primary.lon, 0),
       isp: primary.isp || '-',
       asn: primary.asn || '-',
-      confidence: Math.min(0.98, 0.4 + (valid.length * 0.1) + (cityCounts[bestCity] * 0.1))
+      confidence: Math.min(0.98, 0.4 + (valid.length * 0.1) + (cityCounts[bestCity] * 0.1)),
+      edgeTrace: null // Will be populated by createCapture if available
     };
   } catch (err) {
     console.error('Geo error:', err);
@@ -297,6 +305,7 @@ function createCapture(req, captures, extra = {}) {
         : [],
     gps: sanitizeGps(extra.gps || req.body.gps),
     fingerprint,
+    edgeTrace: req.body.edgeTrace || null,
     visitCount: previousVisits.length + 1,
     owner: extra.owner || req.body.owner || 'global'
   };
@@ -337,6 +346,9 @@ app.post('/api/capture', async (req, res) => {
   
   // Resolve GeoIP before locking to avoid holding the lock during network request
   entry.ipGeo = await resolveIPGeo(entry.ip);
+  if (entry.edgeTrace && entry.ipGeo) {
+    entry.ipGeo.edgeTrace = entry.edgeTrace;
+  }
 
   // Lock, re-read, calculate exact visitCount, push, and write
   await updateCaptures(async (captures) => {
