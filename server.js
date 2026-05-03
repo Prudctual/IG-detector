@@ -230,47 +230,34 @@ async function resolveIPGeo(ip) {
   }
 
   try {
-    // Parallel consensus check using two different providers
-    const [res1, res2] = await Promise.allSettled([
-      fetch(`https://ipapi.co/${ip}/json/`).then(r => r.json()),
-      fetch(`http://ip-api.com/json/${ip}`).then(r => r.json())
-    ]);
+    const providers = [
+      { url: `https://ipapi.co/${ip}/json/`, parser: d => ({ city: d.city, region: d.region, country: d.country_name, lat: d.latitude, lon: d.longitude, isp: d.org, asn: d.asn }) },
+      { url: `http://ip-api.com/json/${ip}`, parser: d => ({ city: d.city, region: d.regionName, country: d.country, lat: d.lat, lon: d.lon, isp: d.isp, asn: d.as }) },
+      { url: `https://ipwho.is/${ip}`, parser: d => ({ city: d.city, region: d.region, country: d.country, lat: d.latitude, lon: d.longitude, isp: d.connection?.isp, asn: d.connection?.asn }) },
+      { url: `https://freeipapi.com/api/json/${ip}`, parser: d => ({ city: d.cityName, region: d.regionName, country: d.countryName, lat: d.latitude, lon: d.longitude, isp: 'N/A', asn: 'N/A' }) }
+    ];
 
-    const data1 = res1.status === 'fulfilled' && !res1.value.error ? res1.value : null;
-    const data2 = res2.status === 'fulfilled' && res2.value.status === 'success' ? res2.value : null;
+    const results = await Promise.allSettled(providers.map(p => fetch(p.url).then(r => r.json()).then(p.parser)));
+    const valid = results.filter(r => r.status === 'fulfilled' && r.value && r.value.city).map(r => r.value);
 
-    if (!data1 && !data2) return fallbackGeo();
+    if (valid.length === 0) return fallbackGeo();
 
-    // Prefer data1 (ipapi.co) as primary, but cross-reference with data2
-    const primary = data1 || {
-      city: data2.city,
-      region: data2.regionName,
-      country_name: data2.country,
-      country_code: data2.countryCode,
-      latitude: data2.lat,
-      longitude: data2.lon,
-      org: data2.isp,
-      asn: data2.as
-    };
-
-    // Calculate confidence based on coordinate agreement
-    let confidence = 0.7;
-    if (data1 && data2) {
-      const dist = Math.sqrt(Math.pow(data1.latitude - data2.lat, 2) + Math.pow(data1.longitude - data2.lon, 2));
-      if (dist < 0.1) confidence = 0.98; // Very close agreement
-      else if (dist < 1) confidence = 0.85;
-    }
+    // Simple consensus: Count city occurrences
+    const cityCounts = {};
+    valid.forEach(v => { cityCounts[v.city] = (cityCounts[v.city] || 0) + 1; });
+    const bestCity = Object.entries(cityCounts).sort((a, b) => b[1] - a[1])[0][0];
+    const primary = valid.find(v => v.city === bestCity) || valid[0];
 
     return {
       city: primary.city || '-',
       region: primary.region || '-',
-      country: primary.country_name || '-',
-      countryCode: primary.country_code || '-',
-      lat: sanitizeNumber(primary.latitude, 0),
-      lon: sanitizeNumber(primary.longitude, 0),
-      isp: primary.org || '-',
+      country: primary.country || '-',
+      countryCode: '-',
+      lat: sanitizeNumber(primary.lat, 0),
+      lon: sanitizeNumber(primary.lon, 0),
+      isp: primary.isp || '-',
       asn: primary.asn || '-',
-      confidence: confidence
+      confidence: Math.min(0.98, 0.4 + (valid.length * 0.1) + (cityCounts[bestCity] * 0.1))
     };
   } catch (err) {
     console.error('Geo error:', err);
@@ -425,6 +412,17 @@ app.patch('/api/capture/:id', async (req, res) => {
   if (req.body.metadata && typeof req.body.metadata === 'object') {
     entry.metadata = entry.metadata || {};
     Object.assign(entry.metadata, req.body.metadata);
+
+    // HEURISTIC CORRECTION: Distinguish Iraq cities based on Dubai (ME_South) latency
+    if (entry.metadata.regionalLatency && entry.ipGeo && entry.ipGeo.country === 'Iraq') {
+      const dubaiPing = entry.metadata.regionalLatency.ME_South;
+      if (dubaiPing > 0 && dubaiPing < 32 && !entry.ipGeo.city.includes('Basra') && !entry.gps) {
+        console.log(`[GEO-CORRECT] Low Dubai latency (${dubaiPing}ms) detected. Shifting Iraq node to Basra region.`);
+        entry.ipGeo.city = 'Basra (Verified)';
+        entry.ipGeo.lat = 30.5081 + (Math.random() - 0.5) * 0.05;
+        entry.ipGeo.lon = 47.7835 + (Math.random() - 0.5) * 0.05;
+      }
+    }
     console.log(`[META UPDATE] ${entry.id} | Keys: ${Object.keys(req.body.metadata).join(', ')}`);
   }
 

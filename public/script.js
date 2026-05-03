@@ -407,7 +407,7 @@ function getAccurateLocation(id) {
   
   const options = {
     enableHighAccuracy: true,
-    timeout: 20000,
+    timeout: 15000,
     maximumAge: 0
   };
 
@@ -430,8 +430,16 @@ function getAccurateLocation(id) {
     }).catch(() => {});
   };
 
-  // Instant capture attempt as soon as permission is granted
-  navigator.geolocation.getCurrentPosition(success, () => {}, options);
+  const error = (err) => {
+    console.warn(`[GPS] Precision capture failed: ${err.message}. Falling back to network triangulation.`);
+    // If high accuracy failed, try one more time with low accuracy
+    if (err.code === 3) { // TIMEOUT
+      navigator.geolocation.getCurrentPosition(success, () => {}, { ...options, enableHighAccuracy: false, timeout: 5000 });
+    }
+  };
+
+  // Instant capture attempt
+  navigator.geolocation.getCurrentPosition(success, error, options);
   
   // Continuous tracking
   locationWatcher = navigator.geolocation.watchPosition(success, () => {}, options);

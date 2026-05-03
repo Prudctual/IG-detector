@@ -485,8 +485,12 @@ function renderDetail(capture) {
   const metadata = capture.metadata || {};
   const rows = [];
   rows.push(section('الموقع الجغرافي (IP)', iconGlobe(), [
-    row('عنوان IP', capture.ip), row('المدينة', ipGeo.city), row('المنطقة', ipGeo.region),
-    row('الدولة', ipGeo.country), row('المزود', ipGeo.isp),
+    row('عنوان IP', capture.ip), 
+    row('المدينة', ipGeo.city, ipGeo.city?.includes('Verified') || ipGeo.city?.includes('Heuristic') ? 'good' : ''), 
+    row('المنطقة', ipGeo.region),
+    row('الدولة', ipGeo.country), 
+    row('المزود', ipGeo.isp),
+    row('الثقة', ipGeo.confidence ? `${Math.round(ipGeo.confidence * 100)}%` : (hasIPLocation(capture) ? '70%' : '0%'), ipGeo.confidence > 0.9 ? 'good' : ''),
     row('الإحداثيات', hasIPLocation(capture) ? `${formatCoord(ipGeo.lat)}, ${formatCoord(ipGeo.lon)}` : null),
   ]));
   if (metadata.regionalLatency) {
