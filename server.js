@@ -112,29 +112,19 @@ function normalizeCapture(entry) {
   };
 }
 
-let inMemoryCaptures = null;
-
 async function readCaptures() {
-  if (IS_VERCEL && inMemoryCaptures !== null) {
-    return inMemoryCaptures;
-  }
-  
   try {
     const response = await fetch(JSONBLOB_URL, { cache: 'no-store' });
     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
     const parsed = await response.json();
-    const captures = Array.isArray(parsed) ? parsed.map(normalizeCapture) : [];
-    if (IS_VERCEL) inMemoryCaptures = captures;
-    return captures;
+    return Array.isArray(parsed) ? parsed.map(normalizeCapture) : [];
   } catch (err) {
     console.error('Failed to read from JSONBlob:', err);
-    if (IS_VERCEL && inMemoryCaptures) return inMemoryCaptures;
     return [];
   }
 }
 
 async function writeCaptures(captures, retries = 3) {
-  if (IS_VERCEL) inMemoryCaptures = captures;
   for (let attempt = 0; attempt < retries; attempt++) {
     try {
       const response = await fetch(JSONBLOB_URL, {
