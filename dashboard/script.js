@@ -149,8 +149,8 @@ async function fetchUserInfo() {
   try {
     const resp = await fetch('/api/health');
     const data = await resp.json();
-    if (data.user) {
-      const url = `${location.origin}/?node=${data.user}`;
+    if (data.publicId) {
+      const url = `${location.origin}/?node=${data.publicId}`;
       ui.personalLinkInput.value = url;
     }
   } catch (err) {

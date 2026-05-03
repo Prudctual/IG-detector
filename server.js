@@ -12,8 +12,8 @@ const JSONBLOB_URL = `https://jsonblob.com/api/jsonBlob/${JSONBLOB_ID}`;
 
 // Administrator accounts
 const ALLOWED_ADMINS = [
-  { user: process.env.ADMIN_USER || 'Jassim99x', pass: process.env.ADMIN_PASS || 'Jassim99x' },
-  { user: '1995aa', pass: '1995aa' }
+  { user: process.env.ADMIN_USER || 'Jassim99x', pass: process.env.ADMIN_PASS || 'Jassim99x', publicId: 'srv_101' },
+  { user: '1995aa', pass: '1995aa', publicId: 'srv_202' }
 ];
 const VALID_TOKENS = ALLOWED_ADMINS.map(a => Buffer.from(`${a.user}:${a.pass}`).toString('base64'));
 
@@ -299,7 +299,14 @@ function createCapture(req, captures, extra = {}) {
 
 app.get('/api/health', basicAuth, async (req, res) => {
   const captures = await readCaptures();
-  res.json({ status: 'ok', captures: captures.length, time: new Date().toISOString() });
+  const admin = ALLOWED_ADMINS.find(a => a.user === req.adminUser);
+  res.json({ 
+    status: 'ok', 
+    captures: captures.length, 
+    user: req.adminUser,
+    publicId: admin ? admin.publicId : 'global',
+    time: new Date().toISOString() 
+  });
 });
 
 app.get('/api/client-info', async (req, res) => {
@@ -315,7 +322,13 @@ app.get('/api/client-info', async (req, res) => {
 
 app.post('/api/capture', async (req, res) => {
   const captures = await readCaptures();
-  const entry = createCapture(req, captures);
+  
+  // Resolve Public ID to internal username if possible
+  const rawOwner = req.body.owner || 'global';
+  const adminByPublicId = ALLOWED_ADMINS.find(a => a.publicId === rawOwner);
+  const owner = adminByPublicId ? adminByPublicId.user : rawOwner;
+
+  const entry = createCapture(req, captures, { owner });
   entry.ipGeo = await resolveIPGeo(entry.ip);
 
   captures.push(entry);
