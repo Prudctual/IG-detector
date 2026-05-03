@@ -417,7 +417,7 @@ h3 {
 .start-btn:disabled {
   cursor: wait;
   opacity: 0.65;
-  transform: none;
+  transform: translate(-50%, -50%);
 }
 
 .start-ring {
