@@ -3,78 +3,349 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Login - Speed Test</title>
+  <title>Access Control — Speed Test Research</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Outfit:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
   <style>
+    :root {
+      --bg: #050707;
+      --card-bg: rgba(15, 18, 18, 0.8);
+      --accent: #ff4d4d;
+      --accent-muted: rgba(255, 77, 77, 0.15);
+      --text: #ffffff;
+      --text-dim: #888e8e;
+      --border: #1a1f1f;
+      --font-display: 'Outfit', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * { box-sizing: border-box; }
+
     body {
-      margin: 0; padding: 0; display: flex; justify-content: center; align-items: center;
-      height: 100vh; background-color: #0b1110; color: #fff; font-family: 'Outfit', sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: var(--font-display);
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
     }
-    .login-container {
-      background: #151a19; padding: 40px; border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.5);
-      width: 100%; max-width: 320px; border: 1px solid #232a29;
+
+    /* Ambient Background Effects */
+    .bg-mesh {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: 
+        radial-gradient(circle at 80% 20%, var(--accent-muted) 0%, transparent 40%),
+        radial-gradient(circle at 10% 80%, rgba(255,255,255,0.02) 0%, transparent 30%);
+      z-index: -1;
+      opacity: 0.6;
     }
-    h1 { margin: 0 0 8px; font-size: 24px; text-align: center; font-weight: 600; }
-    p.subtitle { margin: 0 0 24px; text-align: center; color: #a1a1aa; font-size: 14px; }
-    .input-group { margin-bottom: 16px; }
-    label { display: block; margin-bottom: 8px; font-size: 14px; color: #a1a1aa; font-weight: 500; }
-    input {
-      width: 100%; padding: 12px; border: 1px solid #232a29; border-radius: 8px;
-      background: #0b1110; color: #fff; box-sizing: border-box; font-family: 'JetBrains Mono', monospace;
-      font-size: 14px; transition: border-color 0.2s;
+
+    .bg-noise {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+      opacity: 0.03;
+      z-index: -1;
+      pointer-events: none;
     }
-    input:focus { outline: none; border-color: #ff7b7b; }
+
+    /* Decorative Elements */
+    .decor-line {
+      position: absolute;
+      background: var(--border);
+      z-index: -1;
+    }
+    .line-v { width: 1px; height: 100vh; top: 0; }
+    .line-h { height: 1px; width: 100vw; left: 0; }
+
+    .auth-container {
+      width: 100%;
+      max-width: 400px;
+      padding: 20px;
+      position: relative;
+      animation: reveal 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes reveal {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .auth-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 48px 40px;
+      box-shadow: 0 24px 48px rgba(0, 0, 0, 0.4);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .auth-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 2px;
+      background: linear-gradient(90deg, transparent, var(--accent), transparent);
+      opacity: 0.3;
+    }
+
+    .brand-logo {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 40px;
+    }
+
+    .logo-dot {
+      width: 12px;
+      height: 12px;
+      background: var(--accent);
+      border-radius: 50%;
+      margin-bottom: 16px;
+      box-shadow: 0 0 20px var(--accent);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(255, 77, 77, 0.4); }
+      70% { box-shadow: 0 0 0 15px rgba(255, 77, 77, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(255, 77, 77, 0); }
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 28px;
+      font-weight: 500;
+      letter-spacing: -0.02em;
+      text-align: center;
+    }
+
+    .subtitle {
+      color: var(--text-dim);
+      font-size: 14px;
+      text-align: center;
+      margin: 8px 0 0;
+      font-family: var(--font-mono);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    .form-stack {
+      margin-top: 40px;
+    }
+
+    .field {
+      margin-bottom: 24px;
+      position: relative;
+    }
+
+    .field label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 8px;
+      padding-left: 4px;
+    }
+
+    .field input {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 16px;
+      color: #fff;
+      font-family: var(--font-mono);
+      font-size: 15px;
+      transition: all 0.3s ease;
+    }
+
+    .field input:focus {
+      outline: none;
+      border-color: rgba(255, 77, 77, 0.5);
+      background: rgba(255, 77, 77, 0.02);
+      box-shadow: 0 0 20px rgba(255, 77, 77, 0.05);
+    }
+
+    .error-box {
+      background: rgba(255, 77, 77, 0.1);
+      border: 1px solid rgba(255, 77, 77, 0.2);
+      border-radius: 12px;
+      padding: 12px;
+      color: var(--accent);
+      font-size: 13px;
+      text-align: center;
+      margin-bottom: 24px;
+      display: none;
+      animation: shake 0.4s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+    }
+
+    @keyframes shake {
+      10%, 90% { transform: translate3d(-1px, 0, 0); }
+      20%, 80% { transform: translate3d(2px, 0, 0); }
+      30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+      40%, 60% { transform: translate3d(4px, 0, 0); }
+    }
+
     button {
-      width: 100%; padding: 12px; background: #fff; color: #000; border: none; border-radius: 8px;
-      font-weight: 600; cursor: pointer; transition: background 0.2s; font-family: 'Outfit', sans-serif;
-      font-size: 15px; margin-top: 8px;
+      width: 100%;
+      padding: 16px;
+      background: var(--text);
+      color: var(--bg);
+      border: none;
+      border-radius: 12px;
+      font-family: var(--font-display);
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      margin-top: 8px;
     }
-    button:hover { background: #e5e5e5; }
-    .error { color: #ff7b7b; font-size: 14px; margin-bottom: 16px; text-align: center; display: none; background: rgba(255,123,123,0.1); padding: 10px; border-radius: 6px;}
+
+    button:hover {
+      transform: scale(1.02);
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    button:active {
+      transform: scale(0.98);
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .footer-links {
+      margin-top: 32px;
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+    }
+
+    .footer-links a {
+      color: var(--text-dim);
+      font-size: 12px;
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .footer-links a:hover {
+      color: var(--accent);
+    }
+
+    /* Screen decoration coordinates */
+    .coords {
+      position: absolute;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: rgba(255, 255, 255, 0.1);
+      pointer-events: none;
+    }
   </style>
 </head>
 <body>
-  <div class="login-container">
-    <h1>Sign In</h1>
-    <p class="subtitle">Secure Dashboard Access</p>
-    <div class="error" id="errorMsg">Invalid credentials</div>
-    <form id="loginForm">
-      <div class="input-group">
-        <label>Username</label>
-        <input type="text" id="username" required>
+  <div class="bg-mesh"></div>
+  <div class="bg-noise"></div>
+  
+  <div class="decor-line line-v" style="left: 15%"></div>
+  <div class="decor-line line-v" style="right: 15%"></div>
+  <div class="decor-line line-h" style="top: 20%"></div>
+  
+  <div class="coords" style="top: 20px; left: 20px;">SYS_AUTH_v2.0</div>
+  <div class="coords" style="bottom: 20px; right: 20px;">LC_ENTRY_099X</div>
+
+  <div class="auth-container">
+    <div class="auth-card">
+      <div class="brand-logo">
+        <div class="logo-dot"></div>
+        <h1>Speed Test</h1>
+        <p class="subtitle">Secure Research Node</p>
       </div>
-      <div class="input-group">
-        <label>Password</label>
-        <input type="password" id="password" required>
+
+      <div class="error-box" id="errorMsg">
+        Authentication failed. Access denied.
       </div>
-      <button type="submit">Authenticate</button>
-    </form>
+
+      <form id="loginForm" class="form-stack">
+        <div class="field">
+          <label for="username">Operator ID</label>
+          <input type="text" id="username" placeholder="Username" required autocomplete="username" spellcheck="false">
+        </div>
+        <div class="field">
+          <label for="password">Passkey</label>
+          <input type="password" id="password" placeholder="••••••••" required autocomplete="current-password">
+        </div>
+        <button type="submit" id="submitBtn">Initialize Session</button>
+      </form>
+
+      <div class="footer-links">
+        <a href="#">Contact Admin</a>
+        <a href="#">Network Status</a>
+      </div>
+    </div>
   </div>
+
   <script>
-    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+    const form = document.getElementById('loginForm');
+    const errorMsg = document.getElementById('errorMsg');
+    const submitBtn = document.getElementById('submitBtn');
+
+    form.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const u = document.getElementById('username').value;
-      const p = document.getElementById('password').value;
-      const btn = e.target.querySelector('button');
-      btn.textContent = 'Verifying...';
+      
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
+      
+      // Reset state
+      errorMsg.style.display = 'none';
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Authenticating...';
+
       try {
-        const res = await fetch('/api/login', {
+        const response = await fetch('/api/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username: u, password: p })
+          body: JSON.stringify({ username, password })
         });
-        if (res.ok) {
-          window.location.href = '/dashboard';
+
+        if (response.ok) {
+          // Success animation before redirect
+          submitBtn.textContent = 'Access Granted';
+          submitBtn.style.background = '#22c55e';
+          submitBtn.style.color = '#fff';
+          
+          setTimeout(() => {
+            window.location.href = '/dashboard';
+          }, 800);
         } else {
-          document.getElementById('errorMsg').style.display = 'block';
-          btn.textContent = 'Authenticate';
+          throw new Error('Unauthorized');
         }
       } catch (err) {
-        document.getElementById('errorMsg').style.display = 'block';
-        btn.textContent = 'Authenticate';
+        errorMsg.style.display = 'block';
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Initialize Session';
+        
+        // Reset password field on error
+        document.getElementById('password').value = '';
       }
+    });
+
+    // Subtle parallax effect on mouse move
+    document.addEventListener('mousemove', (e) => {
+      const moveX = (e.clientX - window.innerWidth / 2) * 0.01;
+      const moveY = (e.clientY - window.innerHeight / 2) * 0.01;
+      document.querySelector('.auth-card').style.transform = `translate(${moveX}px, ${moveY}px)`;
     });
   </script>
 </body>

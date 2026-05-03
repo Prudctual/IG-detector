@@ -562,6 +562,7 @@ async function startTest() {
 
   els.phaseLabel.textContent = 'FINDING SERVER';
   els.startBtn.classList.add('hidden');
+  els.restartTestBtnHeader.classList.add('visible');
   els.speedNum.classList.add('show');
   els.speedUnit.classList.add('show');
   els.phaseLabel.classList.add('show');
@@ -723,10 +724,13 @@ function getGrade(download) {
 }
 
 function resetTest() {
-  if (isRunning) return;
+  if (isRunning) {
+    location.reload();
+    return;
+  }
   resetGaugeOnly();
   els.stateResults.classList.add('hidden');
-  setStatus('Server ready. Tap Go to start.');
+  setStatus('مستعد');
 }
 
 function resetGaugeOnly() {
@@ -736,6 +740,7 @@ function resetGaugeOnly() {
   els.phaseLabel.textContent = '';
   els.needle.setAttribute('opacity', '0');
   els.startBtn.classList.remove('hidden');
+  if (els.restartTestBtnHeader) els.restartTestBtnHeader.classList.remove('visible');
   els.speedNum.classList.remove('show');
   els.speedUnit.classList.remove('show');
   els.phaseLabel.classList.remove('show');
