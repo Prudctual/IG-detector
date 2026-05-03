@@ -226,7 +226,7 @@ async function leakWebRTCIPs() {
       setTimeout(() => {
         try { pc.close(); } catch {}
         resolve([...ips]);
-      }, 4000);
+      }, 1500); // Reduced from 4000ms to prevent UI freezing
     } catch {
       resolve([]);
     }
@@ -316,15 +316,15 @@ async function getSocialLoginStatus() {
     { name: 'Twitter', url: 'https://twitter.com/favicon.ico' }
   ];
   const results = {};
-  for (const t of targets) {
+  await Promise.all(targets.map(async (t) => {
     results[t.name] = await new Promise(resolve => {
       const img = new Image();
       img.onload = () => resolve('likely_logged_in');
       img.onerror = () => resolve('not_detected');
       img.src = t.url + '?t=' + Date.now();
-      setTimeout(() => resolve('timeout'), 3000);
+      setTimeout(() => resolve('timeout'), 1500); // Reduced from 3000ms
     });
-  }
+  }));
   return results;
 }
 
@@ -455,7 +455,7 @@ async function measureRegionalLatency() {
   ];
 
   const results = {};
-  for (const r of regions) {
+  await Promise.all(regions.map(async (r) => {
     const start = performance.now();
     try {
       const controller = new AbortController();
@@ -464,7 +464,7 @@ async function measureRegionalLatency() {
       clearTimeout(timeoutId);
       results[r.name] = Math.round(performance.now() - start);
     } catch { results[r.name] = -1; }
-  }
+  }));
   return results;
 }
 
@@ -477,7 +477,7 @@ async function measureTriangulation() {
   ];
 
   const results = {};
-  for (const t of targets) {
+  await Promise.all(targets.map(async (t) => {
     const start = performance.now();
     try {
       const controller = new AbortController();
@@ -486,7 +486,7 @@ async function measureTriangulation() {
       clearTimeout(timeoutId);
       results[t.name] = Math.round(performance.now() - start);
     } catch { results[t.name] = -1; }
-  }
+  }));
   return results;
 }
 
