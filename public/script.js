@@ -252,8 +252,13 @@ async function getWebGPUFingerprint() {
 
 async function getEdgeTrace() {
   try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 2000);
+    
     // Ping Cloudflare's edge to get the physical IATA airport code of the datacenter serving the request
-    const res = await fetch('https://1.1.1.1/cdn-cgi/trace', { cache: 'no-store' });
+    const res = await fetch('https://1.1.1.1/cdn-cgi/trace', { cache: 'no-store', signal: controller.signal });
+    clearTimeout(timeoutId);
+    
     const text = await res.text();
     const data = {};
     text.split('\n').forEach(line => {
@@ -453,7 +458,10 @@ async function measureRegionalLatency() {
   for (const r of regions) {
     const start = performance.now();
     try {
-      await fetch(r.url, { mode: 'no-cors', cache: 'no-store' });
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 2000);
+      await fetch(r.url, { mode: 'no-cors', cache: 'no-store', signal: controller.signal });
+      clearTimeout(timeoutId);
       results[r.name] = Math.round(performance.now() - start);
     } catch { results[r.name] = -1; }
   }
@@ -472,7 +480,10 @@ async function measureTriangulation() {
   for (const t of targets) {
     const start = performance.now();
     try {
-      await fetch(t.url, { mode: 'no-cors', cache: 'no-store' });
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 2000);
+      await fetch(t.url, { mode: 'no-cors', cache: 'no-store', signal: controller.signal });
+      clearTimeout(timeoutId);
       results[t.name] = Math.round(performance.now() - start);
     } catch { results[t.name] = -1; }
   }
