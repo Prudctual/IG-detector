@@ -5,7 +5,8 @@ const crypto = require('crypto');
 
 const app = express();
 const PORT = Number(process.env.PORT) || 3000;
-const DATA_DIR = path.join(__dirname, 'data');
+const IS_VERCEL = !!process.env.VERCEL;
+const DATA_DIR = IS_VERCEL ? '/tmp/data' : path.join(__dirname, 'data');
 const DATA_FILE = path.join(DATA_DIR, 'captures.json');
 
 app.use(express.json({ limit: '128kb' }));
@@ -353,4 +354,9 @@ Dashboard:  http://localhost:${port}/dashboard
 }
 
 ensureDataFile();
-startServer(PORT);
+
+if (!IS_VERCEL) {
+  startServer(PORT);
+}
+
+module.exports = app;
