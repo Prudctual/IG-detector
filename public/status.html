@@ -1,70 +1,76 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>System Status — Speed Test</title>
+  <title>حالة النظام — الشبكة العالمية</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #050707;
-      --card-bg: rgba(15, 18, 18, 0.8);
-      --accent: #22c55e;
-      --accent-muted: rgba(34, 197, 94, 0.1);
-      --text: #ffffff;
-      --text-dim: #888e8e;
-      --border: #1a1f1f;
-      --font-display: 'Outfit', sans-serif;
+      --bg: #0b1110;
+      --card-bg: rgba(19, 29, 27, 0.94);
+      --accent: #95f0c0;
+      --text: #f5f7ef;
+      --text-dim: rgba(245, 247, 239, 0.6);
+      --border: rgba(245, 247, 239, 0.08);
+      --font-main: 'Cairo', sans-serif;
     }
 
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
     body {
-      margin: 0;
       background-color: var(--bg);
       color: var(--text);
-      font-family: var(--font-display);
+      font-family: var(--font-main);
       display: flex;
       justify-content: center;
       align-items: center;
-      height: 100vh;
+      min-height: 100vh;
       overflow: hidden;
+      letter-spacing: 0; /* Smartly remove spaces between merged letters */
+    }
+
+    .bg-grid {
+      position: fixed;
+      inset: 0;
+      background-image: radial-gradient(circle at 2px 2px, rgba(255,255,255,0.03) 1px, transparent 0);
+      background-size: 40px 40px;
+      z-index: -1;
     }
 
     .status-container {
-      width: 100%;
-      max-width: 480px;
-      padding: 40px;
+      width: min(520px, 90%);
+      padding: 50px;
       background: var(--card-bg);
-      backdrop-filter: blur(20px);
+      backdrop-filter: blur(25px);
       border: 1px solid var(--border);
-      border-radius: 32px;
+      border-radius: 40px;
       text-align: center;
+      box-shadow: 0 40px 100px rgba(0,0,0,0.5);
     }
 
-    .status-header {
-      margin-bottom: 48px;
-    }
+    .status-header { margin-bottom: 50px; }
 
     .pulse-dot {
-      width: 12px; height: 12px; background: var(--accent); border-radius: 50%;
-      margin: 0 auto 16px;
-      box-shadow: 0 0 20px var(--accent);
+      width: 14px; height: 14px; background: var(--accent); border-radius: 50%;
+      margin: 0 auto 20px;
+      box-shadow: 0 0 30px var(--accent);
       animation: pulse 2s infinite;
     }
 
     @keyframes pulse {
-      0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4); }
-      70% { box-shadow: 0 0 0 15px rgba(34, 197, 94, 0); }
-      100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+      0% { box-shadow: 0 0 0 0 rgba(149, 240, 192, 0.4); }
+      70% { box-shadow: 0 0 0 20px rgba(149, 240, 192, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(149, 240, 192, 0); }
     }
 
-    h1 { font-size: 24px; font-weight: 600; margin: 0; }
-    p { color: var(--text-dim); font-size: 14px; margin: 8px 0 0; }
+    h1 { font-size: 26px; font-weight: 700; margin-bottom: 12px; }
+    p { color: var(--text-dim); font-size: 15px; }
 
     .services {
-      display: flex;
-      flex-direction: column;
+      display: grid;
       gap: 16px;
       margin-bottom: 40px;
     }
@@ -73,52 +79,70 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 16px 20px;
+      padding: 18px 24px;
       background: rgba(255, 255, 255, 0.02);
       border: 1px solid var(--border);
-      border-radius: 16px;
+      border-radius: 20px;
+      transition: background 0.3s;
+    }
+    
+    .service-item:hover { background: rgba(255, 255, 255, 0.04); }
+
+    .service-name { font-size: 15px; font-weight: 600; }
+    .service-status { 
+      font-size: 12px; 
+      color: var(--accent); 
+      font-weight: 800; 
+      text-transform: uppercase;
+      background: rgba(149, 240, 192, 0.1);
+      padding: 4px 12px;
+      border-radius: 12px;
     }
 
-    .service-name { font-size: 15px; font-weight: 500; }
-    .service-status { font-size: 12px; color: var(--accent); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
-
     .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
       color: var(--text-dim);
       text-decoration: none;
       font-size: 14px;
-      transition: color 0.2s;
+      transition: color 0.3s;
     }
-    .back-link:hover { color: #fff; }
+    .back-link:hover { color: var(--accent); }
   </style>
 </head>
 <body>
+  <div class="bg-grid"></div>
   <div class="status-container">
     <div class="status-header">
       <div class="pulse-dot"></div>
-      <h1>All Systems Operational</h1>
-      <p>Current system health and performance metrics</p>
+      <h1>جميع الأنظمة تعمل بكفاءة</h1>
+      <p>مراقبة حالة البنية التحتية والشبكة العالمية لحظياً</p>
     </div>
 
     <div class="services">
       <div class="service-item">
-        <span class="service-name">Forensic API</span>
-        <span class="service-status">Operational</span>
+        <span class="service-name">عقد فحص السرعة</span>
+        <span class="service-status">متصل</span>
       </div>
       <div class="service-item">
-        <span class="service-name">Database Sync</span>
-        <span class="service-status">Operational</span>
+        <span class="service-name">قاعدة بيانات التوجيه</span>
+        <span class="service-status">متصل</span>
       </div>
       <div class="service-item">
-        <span class="service-name">Auth Gateway</span>
-        <span class="service-status">Operational</span>
+        <span class="service-name">بوابة التحقق الآمنة</span>
+        <span class="service-status">متصل</span>
       </div>
       <div class="service-item">
-        <span class="service-name">CDNs & Assets</span>
-        <span class="service-status">Operational</span>
+        <span class="service-name">شبكة توصيل المحتوى (CDN)</span>
+        <span class="service-status">متصل</span>
       </div>
     </div>
 
-    <a href="/login.html" class="back-link">Return to Login</a>
+    <a href="/" class="back-link">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+      العودة للرئيسية
+    </a>
   </div>
 </body>
 </html>
