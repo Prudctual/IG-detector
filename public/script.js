@@ -443,10 +443,10 @@ async function getPersistentId() {
 
 async function measureRegionalLatency() {
   const regions = [
-    { name: 'EU_West', url: 'https://frankfurt.google.com/generate_204' },
-    { name: 'US_East', url: 'https://new-york.google.com/generate_204' },
-    { name: 'ASIA_East', url: 'https://tokyo.google.com/generate_204' },
-    { name: 'ME_South', url: 'https://dubai.google.com/generate_204' }
+    { name: 'EU_West', url: 'https://dynamodb.eu-central-1.amazonaws.com/ping' }, // Frankfurt
+    { name: 'US_East', url: 'https://dynamodb.us-east-1.amazonaws.com/ping' }, // N. Virginia
+    { name: 'ME_Bahrain', url: 'https://dynamodb.me-south-1.amazonaws.com/ping' }, // Bahrain (Extremely close to Basra)
+    { name: 'ME_South', url: 'https://dynamodb.me-central-1.amazonaws.com/ping' } // UAE
   ];
 
   const results = {};

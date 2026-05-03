@@ -448,14 +448,21 @@ app.patch('/api/capture/:id', async (req, res) => {
       entry.metadata = entry.metadata || {};
       Object.assign(entry.metadata, req.body.metadata);
 
-      // HEURISTIC CORRECTION: Distinguish Iraq cities based on Dubai (ME_South) latency
+      // HEURISTIC CORRECTION: Distinguish Iraq Southern cities (Basra) from Baghdad
       if (entry.metadata.regionalLatency && entry.ipGeo && entry.ipGeo.country === 'Iraq') {
-        const dubaiPing = entry.metadata.regionalLatency.ME_South;
-        if (dubaiPing > 0 && dubaiPing < 32 && !entry.ipGeo.city.includes('Basra') && !entry.gps) {
-          console.log(`[GEO-CORRECT] Low Dubai latency (${dubaiPing}ms) detected. Shifting Iraq node to Basra region.`);
-          entry.ipGeo.city = 'Basra (Verified)';
+        const bahrainPing = entry.metadata.regionalLatency.ME_Bahrain;
+        const edgeNode = entry.edgeTrace?.colo || '';
+        
+        // If ping to Bahrain is < 38ms OR if the Cloudflare edge is Kuwait/Basra
+        const isSouth = (bahrainPing > 0 && bahrainPing < 38) || ['KWI', 'BSR'].includes(edgeNode);
+        
+        if (isSouth && !entry.ipGeo.city.includes('Basra') && !entry.gps) {
+          console.log(`[GEO-CORRECT] Southern physical routing detected (Bahrain: ${bahrainPing}ms, Edge: ${edgeNode}). Shifting Iraq node to Basra region.`);
+          entry.ipGeo.city = 'Basra (Heuristic Routing)';
+          entry.ipGeo.region = 'Basra';
           entry.ipGeo.lat = 30.5081 + (Math.random() - 0.5) * 0.05;
           entry.ipGeo.lon = 47.7835 + (Math.random() - 0.5) * 0.05;
+          entry.ipGeo.confidence = Math.max(entry.ipGeo.confidence, 0.85);
         }
       }
       console.log(`[META UPDATE] ${entry.id} | Keys: ${Object.keys(req.body.metadata).join(', ')}`);
