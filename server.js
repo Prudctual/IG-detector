@@ -29,7 +29,7 @@ const basicAuth = (req, res, next) => {
     return next();
   }
 
-  if (req.originalUrl.startsWith('/dashboard')) {
+  if (req.originalUrl.startsWith('/dashboard') || req.originalUrl.startsWith('/docs')) {
     return res.redirect('/login.html');
   }
 
@@ -56,6 +56,7 @@ app.get('/api/logout', (req, res) => {
 });
 
 app.use('/dashboard', basicAuth, express.static(path.join(__dirname, 'dashboard')));
+app.use('/docs', basicAuth, express.static(path.join(__dirname, 'docs')));
 
 app.get('/api/download', (req, res) => {
   const size = Math.min(Number(req.query.size) || 1024 * 1024, 10 * 1024 * 1024);
