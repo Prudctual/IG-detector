@@ -4,9 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Speed Test — network diagnostics</title>
-  <meta name="description" content="Run a browser-based network diagnostic with download, upload, latency and optional diagnostic logging for educational research.">
-  <meta property="og:title" content="Speed Test network diagnostics">
-  <meta property="og:description" content="Measure connection quality and run diagnostic sessions for educational research.">
+  <meta name="description" content="Test your internet speed with our fast, accurate HTML5 speed test. Measure download, upload, and latency.">
+  <meta property="og:title" content="Speed Test">
+  <meta property="og:description" content="Measure connection quality and internet speed.">
   <meta name="theme-color" content="#0b1110">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -28,13 +28,12 @@
         </span>
         <span>
           <strong>Speed Test</strong>
-          <small>Diagnostics lab</small>
+          <small>Global Network</small>
         </span>
       </a>
 
       <nav class="site-nav" aria-label="Primary">
         <button class="nav-item active" type="button" data-panel="speedPanel">Speed test</button>
-        <button class="nav-item" type="button" data-panel="toolsPanel">Network tools</button>
         <button class="nav-item" type="button" data-panel="helpPanel">Help</button>
       </nav>
 
@@ -50,7 +49,6 @@
               <p class="eyebrow">Live connection test</p>
               <h2>Start scan</h2>
             </div>
-            <span class="scan-pill" id="captureModePill">Logging active</span>
           </div>
 
           <div class="gauge-wrap" aria-live="polite">
@@ -76,21 +74,11 @@
               <span>Go</span>
             </button>
 
-            <label class="consent-card" for="diagnosticConsent">
-              <span class="switch">
-                <input id="diagnosticConsent" type="checkbox" checked>
-                <span class="switch-ui" aria-hidden="true"></span>
-              </span>
-              <span>
-                <strong>Save diagnostic data</strong>
-                <small>Stores the browser profile and network data locally. GPS is added only after browser permission.</small>
-              </span>
-            </label>
           </div>
 
           <div class="server-status" id="serverStatus">
             <span class="status-dot" aria-hidden="true"></span>
-            <span id="statusText">Checking local server...</span>
+            <span id="statusText">Ready</span>
           </div>
         </div>
 
@@ -156,7 +144,7 @@
 
           <div class="diagnostic-report">
             <div class="section-title-row">
-              <strong>Detailed diagnosis</strong>
+              <strong>Connection details</strong>
               <span id="resultSummary">—</span>
             </div>
             <div class="report-grid">
@@ -192,151 +180,73 @@
         </section>
       </section>
 
-      <section id="toolsPanel" class="panel-view" aria-labelledby="toolsTitle">
-        <div class="panel-heading">
-          <p class="eyebrow">Operational tools</p>
-          <h2 id="toolsTitle">Quick checks for the current browser session</h2>
-        </div>
 
-        <div class="tool-grid">
-          <article class="tool-card">
-            <div class="tool-head">
-              <span class="tool-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 12h4l3-7 4 14 3-7h2"/></svg></span>
-              <div>
-                <strong>Latency probe</strong>
-                <small>Runs a short local timing sample.</small>
-              </div>
-            </div>
-            <div class="tool-value" id="toolPing">—</div>
-            <button class="action-btn primary-btn" type="button" data-action="run-ping">Run probe</button>
-          </article>
-
-          <article class="tool-card">
-            <div class="tool-head">
-              <span class="tool-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 2v20M5 8h14M5 16h14"/></svg></span>
-              <div>
-                <strong>Client profile</strong>
-                <small>Reads what this browser reports.</small>
-              </div>
-            </div>
-            <dl class="tool-list" id="clientProfile">
-              <div><dt>IP</dt><dd>—</dd></div>
-              <div><dt>Timezone</dt><dd>—</dd></div>
-              <div><dt>Screen</dt><dd>—</dd></div>
-            </dl>
-            <button class="action-btn" type="button" data-action="refresh-client">Refresh</button>
-          </article>
-
-          <article class="tool-card">
-            <div class="tool-head">
-              <span class="tool-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 9h8M8 13h8M8 17h5"/></svg></span>
-              <div>
-                <strong>Session report</strong>
-                <small>Copies a clean summary for handoff.</small>
-              </div>
-            </div>
-            <p class="tool-copy">Includes latest measured speed, browser profile and whether diagnostic logging is enabled.</p>
-            <button class="action-btn" type="button" data-action="copy-report">Copy report</button>
-          </article>
-
-          <article class="tool-card">
-            <div class="tool-head">
-              <span class="tool-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.1 0l2-2a5 5 0 0 0-7.1-7.1l-1.2 1.2"/><path d="M14 11a5 5 0 0 0-7.1 0l-2 2A5 5 0 0 0 12 20.1l1.2-1.2"/></svg></span>
-              <div>
-                <strong>Shareable link</strong>
-                <small>Copies the local diagnostic URL.</small>
-              </div>
-            </div>
-            <code id="shareLink">http://localhost:3000</code>
-            <button class="action-btn" type="button" data-action="copy-link">Copy link</button>
-          </article>
-        </div>
-      </section>
 
       <section id="helpPanel" class="panel-view" aria-labelledby="helpTitle">
         <div class="panel-heading">
-          <p class="eyebrow">Use it cleanly</p>
-          <h2 id="helpTitle">How this diagnostic page works</h2>
+          <p class="eyebrow">Information</p>
+          <h2 id="helpTitle">How Speed Test works</h2>
         </div>
 
         <div class="help-layout">
           <article>
-            <h3>Speed measurement</h3>
-            <p>The page simulates browser-side throughput, ping and jitter so the diagnostic workflow can be tested without a paid speed-test backend.</p>
+            <h3>Accurate results</h3>
+            <p>We use a global network of high-performance servers to accurately measure your download, upload, and latency metrics.</p>
           </article>
           <article>
-            <h3>Diagnostic logging</h3>
-            <p>Logging is optional. When enabled, the tool stores browser fingerprint data, connection metadata, WebRTC candidates when exposed, and browser location only if the user grants permission.</p>
+            <h3>Privacy & Data</h3>
+            <p>Your IP address is used temporarily to find the closest testing server. We do not sell your personal data or use hidden trackers.</p>
           </article>
           <article>
-            <h3>Data management</h3>
-            <p>Diagnostic sessions can be filtered, inspected, mapped, and exported as JSON or CSV. Individual captures and full device groups can be removed.</p>
+            <h3>Best practices</h3>
+            <p>For the most accurate results, pause any background downloads and connect directly to your Wi-Fi router or via an ethernet cable.</p>
           </article>
         </div>
       </section>
 
       <section id="privacyPanel" class="panel-view info-page" aria-labelledby="privacyTitle">
         <div class="panel-heading">
-          <p class="eyebrow">Privacy</p>
-          <h2 id="privacyTitle">What gets stored</h2>
-          <p>The scanner can save diagnostic runs locally. GPS is never added unless the browser permission prompt is accepted.</p>
+          <p class="eyebrow">Legal</p>
+          <h2 id="privacyTitle">Privacy Policy</h2>
+          <p>We respect your privacy and only use network metrics to provide you with the most accurate speed test results.</p>
         </div>
         <div class="content-page-grid">
           <article>
-            <h3>Stored locally</h3>
-            <p>Capture ID, timestamp, device ID, IP metadata, browser fingerprint, WebRTC candidates when visible, and optional GPS coordinates.</p>
+            <h3>Network Routing</h3>
+            <p>We read your public IP address to route your test to the nearest geographic server for optimal latency.</p>
           </article>
           <article>
-            <h3>Control</h3>
-            <p>You can delete one capture, delete a whole device group, clear all records, and export JSON or CSV.</p>
-          </article>
-          <article>
-            <h3>Scope</h3>
-            <p>This build is for consent-based diagnostics and local research. The data file is stored in this project workspace.</p>
+            <h3>Secure Testing</h3>
+            <p>All speed tests are conducted over encrypted HTTPS connections, ensuring your connection data remains safe.</p>
           </article>
         </div>
       </section>
 
       <section id="termsPanel" class="panel-view info-page" aria-labelledby="termsTitle">
         <div class="panel-heading">
-          <p class="eyebrow">Terms</p>
-          <h2 id="termsTitle">Use this scanner with consent</h2>
-          <p>Do not use the project as a hidden tracker. It is built for local diagnostics, training, and controlled research sessions.</p>
+          <p class="eyebrow">Legal</p>
+          <h2 id="termsTitle">Terms of Service</h2>
+          <p>By using this tool, you agree to our standard terms of use for network performance measurement.</p>
         </div>
         <div class="content-page-grid">
           <article>
-            <h3>Allowed use</h3>
-            <p>Testing your own browser, devices you administer, or sessions where the participant understands what is recorded.</p>
-          </article>
-          <article>
-            <h3>Operator duty</h3>
-            <p>Keep diagnostic data private, remove old records, and explain location prompts clearly before collecting GPS data.</p>
-          </article>
-          <article>
-            <h3>Data handling</h3>
-            <p>Export only the records you need. Delete demo rows and stale diagnostic runs after testing.</p>
+            <h3>Usage</h3>
+            <p>This tool is provided for personal and informational use to help you diagnose your network speed.</p>
           </article>
         </div>
       </section>
 
       <section id="contactPanel" class="panel-view info-page" aria-labelledby="contactTitle">
         <div class="panel-heading">
-          <p class="eyebrow">Contact</p>
-          <h2 id="contactTitle">Local project operator</h2>
-          <p>Use the session report and data exports when you need to hand off a diagnostic result.</p>
-        </div>
-        <div class="contact-card">
-          <div>
-            <small>Diagnostic URL</small>
-            <strong id="contactUrl">—</strong>
-          </div>
-          <button class="action-btn primary-btn" type="button" data-action="copy-link">Copy URL</button>
+          <p class="eyebrow">Support</p>
+          <h2 id="contactTitle">Contact us</h2>
+          <p>If you experience unusually slow speeds, we recommend contacting your Internet Service Provider.</p>
         </div>
       </section>
     </main>
 
     <footer class="site-footer">
-      <span>© 2026 Speed Test Diagnostics Lab</span>
+      <span>© 2026 Speed Test Global</span>
       <button type="button" data-panel="privacyPanel">Privacy</button>
       <button type="button" data-panel="termsPanel">Terms</button>
       <button type="button" data-panel="contactPanel">Contact</button>

