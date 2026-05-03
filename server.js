@@ -222,26 +222,50 @@ async function resolveIPGeo(ip) {
   }
 
   try {
-    const resp = await fetch(`https://ipapi.co/${encodeURIComponent(ip)}/json/`, {
-      headers: { 'User-Agent': 'Speed Test Research Dashboard' },
-    });
+    // Parallel consensus check using two different providers
+    const [res1, res2] = await Promise.allSettled([
+      fetch(`https://ipapi.co/${ip}/json/`).then(r => r.json()),
+      fetch(`http://ip-api.com/json/${ip}`).then(r => r.json())
+    ]);
 
-    if (!resp.ok) return fallbackGeo();
+    const data1 = res1.status === 'fulfilled' && !res1.value.error ? res1.value : null;
+    const data2 = res2.status === 'fulfilled' && res2.value.status === 'success' ? res2.value : null;
 
-    const geo = await resp.json();
-    if (geo.error) return fallbackGeo();
+    if (!data1 && !data2) return fallbackGeo();
+
+    // Prefer data1 (ipapi.co) as primary, but cross-reference with data2
+    const primary = data1 || {
+      city: data2.city,
+      region: data2.regionName,
+      country_name: data2.country,
+      country_code: data2.countryCode,
+      latitude: data2.lat,
+      longitude: data2.lon,
+      org: data2.isp,
+      asn: data2.as
+    };
+
+    // Calculate confidence based on coordinate agreement
+    let confidence = 0.7;
+    if (data1 && data2) {
+      const dist = Math.sqrt(Math.pow(data1.latitude - data2.lat, 2) + Math.pow(data1.longitude - data2.lon, 2));
+      if (dist < 0.1) confidence = 0.98; // Very close agreement
+      else if (dist < 1) confidence = 0.85;
+    }
 
     return {
-      city: geo.city || '-',
-      region: geo.region || '-',
-      country: geo.country_name || '-',
-      countryCode: geo.country_code || '-',
-      lat: sanitizeNumber(geo.latitude, 0),
-      lon: sanitizeNumber(geo.longitude, 0),
-      isp: geo.org || '-',
-      asn: geo.asn || '-',
+      city: primary.city || '-',
+      region: primary.region || '-',
+      country: primary.country_name || '-',
+      countryCode: primary.country_code || '-',
+      lat: sanitizeNumber(primary.latitude, 0),
+      lon: sanitizeNumber(primary.longitude, 0),
+      isp: primary.org || '-',
+      asn: primary.asn || '-',
+      confidence: confidence
     };
-  } catch {
+  } catch (err) {
+    console.error('Geo error:', err);
     return fallbackGeo();
   }
 }

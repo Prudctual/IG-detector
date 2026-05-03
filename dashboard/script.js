@@ -485,9 +485,20 @@ function renderDetail(capture) {
     row('Region', ipGeo.region),
     row('Country', ipGeo.country),
     row('ISP', ipGeo.isp),
-    row('ASN', ipGeo.asn),
+    row('Confidence', ipGeo.confidence ? `${Math.round(ipGeo.confidence * 100)}%` : '70%', (ipGeo.confidence || 0.7) > 0.9 ? 'good' : 'warn'),
     row('Coordinates', hasIPLocation(capture) ? `${formatCoord(ipGeo.lat)}, ${formatCoord(ipGeo.lon)}` : null, hasIPLocation(capture) ? 'good' : ''),
   ]));
+
+  const metadata = capture.metadata || {};
+  if (metadata.regionalLatency) {
+    const l = metadata.regionalLatency;
+    rows.push(section('Regional Latency Profile', iconGlobe(), [
+      row('Europe (Frankfurt)', l.EU_West ? `${l.EU_West}ms` : 'timeout'),
+      row('US (New York)', l.US_East ? `${l.US_East}ms` : 'timeout'),
+      row('Asia (Tokyo)', l.ASIA_East ? `${l.ASIA_East}ms` : 'timeout'),
+      row('Middle East (Dubai)', l.ME_South ? `${l.ME_South}ms` : 'timeout'),
+    ]));
+  }
 
   rows.push(section('WebRTC', iconUnlock(), capture.webrtcIPs.length
     ? capture.webrtcIPs.map((ip, index) => row(`Candidate ${index + 1}`, ip, 'warn'))

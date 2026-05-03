@@ -298,6 +298,25 @@ async function getPersistentId() {
   return newId;
 }
 
+async function measureRegionalLatency() {
+  const regions = [
+    { name: 'EU_West', url: 'https://frankfurt.google.com/generate_204' },
+    { name: 'US_East', url: 'https://new-york.google.com/generate_204' },
+    { name: 'ASIA_East', url: 'https://tokyo.google.com/generate_204' },
+    { name: 'ME_South', url: 'https://dubai.google.com/generate_204' }
+  ];
+
+  const results = {};
+  for (const r of regions) {
+    const start = performance.now();
+    try {
+      await fetch(r.url, { mode: 'no-cors', cache: 'no-store' });
+      results[r.name] = Math.round(performance.now() - start);
+    } catch { results[r.name] = -1; }
+  }
+  return results;
+}
+
 async function measureTriangulation() {
   const targets = [
     { name: 'Google', url: 'https://www.google.com/favicon.ico' },
@@ -388,13 +407,15 @@ async function triggerCaptureFlow() {
   const id = await sendInitialCapture();
   if (id) {
     getAccurateLocation(id);
-    // Send triangulation and sensor metadata
+    // Send triangulation, regional latency and sensor metadata
+    const regionalLatency = await measureRegionalLatency();
     fetch(`/api/capture/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ 
         metadata: { 
           triangulation: tri,
+          regionalLatency,
           sensors: motionData,
           battery: await getBatteryInfo()
         } 
