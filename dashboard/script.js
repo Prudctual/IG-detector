@@ -200,7 +200,9 @@ function normalizeCapture(capture) {
     webrtcIPs: Array.isArray(capture.webrtcIPs) ? capture.webrtcIPs : [],
     gps: capture.gps || null,
     fingerprint: capture.fingerprint || {},
+    metadata: capture.metadata || {},
     visitCount: Number(capture.visitCount) || 1,
+    owner: capture.owner || 'global',
   };
 }
 
