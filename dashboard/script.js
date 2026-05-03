@@ -381,35 +381,51 @@ function renderMap(shouldFit = false) {
     const loc = getCaptureLocation(capture);
     if (!loc) return;
 
-    const color = capture.id === selectedId ? '#ff7b7b' : loc.source === 'gps' ? '#95f0c0' : '#8bb8ff';
-    const size = capture.id === selectedId ? 15 : loc.source === 'gps' ? 12 : 10;
+    const isSelected = capture.id === selectedId;
+    const isGPS = loc.source === 'gps';
+    const color = isSelected ? '#ff7b7b' : isGPS ? '#95f0c0' : '#8bb8ff';
+    const size = isSelected ? 20 : isGPS ? 14 : 11;
     const device = parseDevice(capture.fingerprint.userAgent);
+    const pulseClass = isSelected ? 'pulse-ring selected' : isGPS ? 'pulse-ring gps' : '';
+
     const marker = L.marker([loc.lat, loc.lon], {
       icon: L.divIcon({
         className: '',
-        html: `<button class="map-marker" style="width:${size}px;height:${size}px;background:${color};box-shadow:0 0 0 5px ${hexToRgba(color, 0.14)},0 0 24px ${hexToRgba(color, 0.32)}" aria-label="Map marker"></button>`,
-        iconSize: [size, size],
-        iconAnchor: [size / 2, size / 2],
+        html: `<div class="map-pin-wrap">
+          ${pulseClass ? `<span class="${pulseClass}"></span>` : ''}
+          <button class="map-marker" style="width:${size}px;height:${size}px;background:${color};box-shadow:0 0 0 4px ${hexToRgba(color, 0.18)},0 0 20px ${hexToRgba(color, 0.35)}" aria-label="نقطة على الخريطة"></button>
+        </div>`,
+        iconSize: [size + 12, size + 12],
+        iconAnchor: [(size + 12) / 2, (size + 12) / 2],
       }),
+      zIndexOffset: isSelected ? 1000 : isGPS ? 500 : 0,
     }).addTo(map);
 
     marker.bindPopup(`
-      <div class="popup-label">${escapeHTML(device.name)} / ${escapeHTML(capture.id)}</div>
-      <div class="popup-coords">${formatCoord(loc.lat)}, ${formatCoord(loc.lon)}</div>
-      <div class="popup-meta">${loc.source.toUpperCase()} / ${escapeHTML(capture.ipGeo.city || capture.ip || 'Unknown')}</div>
-    `);
+      <div class="popup-card">
+        <div class="popup-title">${escapeHTML(device.name)}</div>
+        <div class="popup-id">#${escapeHTML(capture.id)}</div>
+        <div class="popup-coords">${formatCoord(loc.lat)}, ${formatCoord(loc.lon)}</div>
+        <div class="popup-meta">
+          <span class="popup-chip ${isGPS ? 'gps' : 'ip'}">${isGPS ? 'GPS' : 'IP'}</span>
+          <span>${escapeHTML(capture.ipGeo.city || capture.ip || 'غير معروف')}</span>
+        </div>
+      </div>
+    `, { className: 'dark-popup', maxWidth: 260 });
+
     marker.on('click', () => selectCapture(capture.id));
     markerLayers.push(marker);
     plotted.push([loc.lat, loc.lon]);
 
-    if (capture.gps?.accuracy) {
+    if (capture.gps?.accuracy && capture.gps.accuracy < 5000) {
       const circle = L.circle([loc.lat, loc.lon], {
         radius: capture.gps.accuracy,
         color,
         fillColor: color,
-        fillOpacity: 0.07,
-        weight: 1,
-        opacity: 0.3,
+        fillOpacity: 0.06,
+        weight: 1.5,
+        opacity: 0.35,
+        dashArray: '6 4',
       }).addTo(map);
       markerLayers.push(circle);
     }
