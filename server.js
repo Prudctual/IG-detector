@@ -14,6 +14,18 @@ app.use(express.json({ limit: '128kb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/dashboard', express.static(path.join(__dirname, 'dashboard')));
 
+app.get('/api/download', (req, res) => {
+  const size = Math.min(Number(req.query.size) || 1024 * 1024, 10 * 1024 * 1024);
+  const chunk = Buffer.alloc(size, '1');
+  res.set('Content-Type', 'application/octet-stream');
+  res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+  res.send(chunk);
+});
+
+app.post('/api/upload', express.raw({ type: '*/*', limit: '10mb' }), (req, res) => {
+  res.json({ status: 'ok', received: req.body ? req.body.length : 0 });
+});
+
 function fallbackGeo() {
   return {
     city: 'Local',

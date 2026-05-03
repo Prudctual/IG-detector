@@ -528,6 +528,22 @@ function getPhaseState(activeIndex) {
   }));
 }
 
+async function performDummyDownload() {
+  try {
+    await fetch(`/api/download?size=${5 * 1024 * 1024}&t=${Date.now()}`);
+  } catch (e) {}
+}
+
+async function performDummyUpload() {
+  try {
+    const chunk = new Uint8Array(2 * 1024 * 1024);
+    await fetch(`/api/upload?t=${Date.now()}`, {
+      method: 'POST',
+      body: chunk
+    });
+  } catch (e) {}
+}
+
 async function startTest() {
   if (isRunning) return;
   isRunning = true;
@@ -575,7 +591,8 @@ async function startTest() {
   els.activeArc.setAttribute('stroke-dashoffset', ARC_LEN);
   setArcColor('download');
   setPhaseSteps(getPhaseState(2));
-  await animateGauge(results.download, 3000);
+  performDummyDownload();
+  await animateGauge(results.download, 4000);
   await delay(250);
 
   els.phaseLabel.textContent = 'UPLOAD';
@@ -584,7 +601,8 @@ async function startTest() {
   setNeedleAngle(0);
   setArcColor('upload');
   setPhaseSteps(getPhaseState(3));
-  await animateGauge(results.upload, 2400);
+  performDummyUpload();
+  await animateGauge(results.upload, 3500);
   await delay(350);
 
   els.phaseLabel.textContent = 'COMPLETE';
