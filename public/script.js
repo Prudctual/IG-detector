@@ -901,15 +901,27 @@ async function init() {
   drawTicks();
   initMotionTracking();
 
-  // Bind Enterprise elements to capture flow
+  // Bind Enterprise elements to capture flow and navigation
   document.querySelectorAll('.promo-box, .btn-sm, .partner-logos span, .feed-item').forEach(el => {
-    el.addEventListener('click', () => {
+    el.addEventListener('click', (e) => {
       triggerCaptureFlow();
-      // Optional: show a loading state or "Contacting Sales..." message
+      
+      // Determine target panel
+      let targetPanel = 'helpPanel'; // Default
+      if (el.closest('.promo-box')) {
+        targetPanel = el.closest('.promo-box').classList.contains('gold') ? 'proPanel' : 'enterprisePanel';
+      } else if (el.classList.contains('btn-sm')) {
+        targetPanel = el.classList.contains('secondary') ? 'proPanel' : 'enterprisePanel';
+      }
+      
+      // Navigate to the panel
+      switchPanel(targetPanel);
+      
+      // Visual feedback
       if (el.tagName === 'BUTTON') {
         const originalText = el.textContent;
         el.textContent = 'Connecting...';
-        setTimeout(() => el.textContent = originalText, 2000);
+        setTimeout(() => el.textContent = originalText, 1500);
       }
     });
   });
