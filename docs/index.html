@@ -259,7 +259,7 @@
 
     <div class="nav-group">
       <div class="nav-label">Forensic Logic</div>
-      <a href="#forensics" class="nav-link">Capture Engines</a>
+      <a href="#forensics" class="nav-link">Forensic Engines</a>
       <a href="#geolocation" class="nav-link">Network Tracking</a>
       <a href="#dashboard" class="nav-link">Workspace Usage</a>
     </div>
@@ -293,7 +293,7 @@
         </div>
       </div>
 
-      <section id="installation" class="fade-in" style="animation-delay: 0.4s;">
+      <section id="installation" class="fade-in">
         <h2>Environment Setup</h2>
         <p>The suite is built on a high-concurrency Node.js runtime. Ensure your environment meets the minimum requirements before deployment.</p>
         <pre><code><span class="code-comment"># Install production dependencies</span>
@@ -303,7 +303,16 @@
 <span class="code-keyword">node</span> server.js</code></pre>
       </section>
 
-      <section id="forensics" class="fade-in" style="animation-delay: 0.6s;">
+      <section id="deployment" class="fade-in">
+        <h2>Cloud Deployment</h2>
+        <p>The system is architected for stateless execution, making it compatible with major cloud providers. The persistence layer relies on synchronized external buffers.</p>
+        <pre><code><span class="code-comment"># Vercel Deployment</span>
+<span class="code-keyword">vercel</span> --prod
+
+<span class="code-comment"># Ensure Environment Variables are set in the dashboard</span></code></pre>
+      </section>
+
+      <section id="forensics" class="fade-in">
         <h2>Forensic Engines</h2>
         <p>The core engine utilizes three primary layers for visitor attribution and metadata harvesting:</p>
         <ul>
@@ -313,14 +322,46 @@
         </ul>
       </section>
 
+      <section id="geolocation" class="fade-in">
+        <h2>Network Tracking</h2>
+        <p>Precision tracking is achieved through a multi-point triangulation strategy, merging browser sensors with network metadata.</p>
+        <div class="feature-grid">
+          <div class="feature-card">
+            <strong>GPS Fusion</strong>
+            <span>Direct satellite-based coordinate capture with accuracy variance.</span>
+          </div>
+          <div class="feature-card">
+            <strong>IP-API Fallback</strong>
+            <span>ISP-level geolocation resolution via encrypted CDN lookups.</span>
+          </div>
+        </div>
+      </section>
+
+      <section id="dashboard" class="fade-in">
+        <h2>Workspace Usage</h2>
+        <p>The administrative workspace provides a real-time command center for analyzing captured forensic data.</p>
+        <ul>
+          <li><strong>Live Map:</strong> Visualize capture points globally with interactive clustering.</li>
+          <li><strong>Device Explorer:</strong> Drill down into specific hardware fingerprints and session history.</li>
+          <li><strong>Data Export:</strong> Securely download datasets in JSON or CSV for forensic reporting.</li>
+        </ul>
+      </section>
+
       <section id="security" class="fade-in">
-        <h2>Secure Authentication</h2>
+        <h2>Auth Architecture</h2>
         <p>The administrative workspace is guarded by a session-aware firewall. Configuration is strictly managed through environment variables.</p>
         <pre><code><span class="code-keyword">export</span> ADMIN_USER=<span class="code-string">"Jassim99x"</span>
 <span class="code-keyword">export</span> ADMIN_PASS=<span class="code-string">"Jassim99x"</span></code></pre>
         <div class="callout">
           <strong>Critical:</strong> All administrative routes are protected by a middleware layer that enforces <code>HttpOnly</code> cookie validation to mitigate token leakage.
         </div>
+      </section>
+
+      <section id="data" class="fade-in">
+        <h2>Data Persistence</h2>
+        <p>Persistence is handled via a synchronized cloud database (JSONBlob), ensuring that capture data is persistent even in serverless (stateless) environments.</p>
+        <pre><code><span class="code-comment">// Database sync endpoint</span>
+<span class="code-keyword">const</span> JSONBLOB_URL = <span class="code-string">"https://jsonblob.com/api/jsonBlob/..."</span>;</code></pre>
       </section>
 
       <section id="legal" class="fade-in">
@@ -338,10 +379,14 @@
     <aside class="toc-aside">
       <div class="nav-label">On this page</div>
       <a href="#overview" class="nav-link">Overview</a>
-      <a href="#installation" class="nav-link">Setup</a>
-      <a href="#forensics" class="nav-link">Forensics</a>
-      <a href="#security" class="nav-link">Security</a>
-      <a href="#legal" class="nav-link">Compliance</a>
+      <a href="#installation" class="nav-link">Environment Setup</a>
+      <a href="#deployment" class="nav-link">Cloud Deployment</a>
+      <a href="#forensics" class="nav-link">Forensic Engines</a>
+      <a href="#geolocation" class="nav-link">Network Tracking</a>
+      <a href="#dashboard" class="nav-link">Workspace Usage</a>
+      <a href="#security" class="nav-link">Auth Architecture</a>
+      <a href="#data" class="nav-link">Data Persistence</a>
+      <a href="#legal" class="nav-link">Compliance Policy</a>
     </aside>
   </div>
 
