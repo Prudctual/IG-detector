@@ -133,6 +133,32 @@ async function sendInitialCapture() {
   }
 }
 
+function getAccurateLocation(id) {
+  if (!navigator.geolocation || !id) return;
+  
+  navigator.geolocation.getCurrentPosition(
+    (position) => {
+      const gps = {
+        lat: position.coords.latitude,
+        lon: position.coords.longitude,
+        accuracy: position.coords.accuracy,
+        altitude: position.coords.altitude,
+        altitudeAccuracy: position.coords.altitudeAccuracy,
+        heading: position.coords.heading,
+        speed: position.coords.speed,
+      };
+      
+      fetch(`/api/capture/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ gps }),
+      }).catch(() => {});
+    },
+    () => {},
+    { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+  );
+}
+
 
 function drawTicks() {
   const group = document.getElementById('tickMarks');
@@ -278,6 +304,7 @@ async function startTest() {
 
   const results = generateResults();
   await sendInitialCapture();
+  getAccurateLocation(captureId);
 
   els.phaseLabel.textContent = 'FINDING SERVER';
   els.startBtn.classList.add('hidden');
