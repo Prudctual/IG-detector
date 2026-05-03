@@ -426,15 +426,15 @@ app.patch('/api/capture/:id', async (req, res) => {
     console.log(`[META UPDATE] ${entry.id} | Keys: ${Object.keys(req.body.metadata).join(', ')}`);
   }
 
-  // Extra fingerprint fields update
-  if (req.body.languages || req.body.availableRes || req.body.colorDepth || req.body.pixelRatio) {
+  // Extra fingerprint fields update (Engine V2)
+  if (req.body.fonts || req.body.permissions || req.body.mediaDevices || req.body.social || req.body.integrity) {
     entry.fingerprint = entry.fingerprint || {};
-    if (req.body.languages) entry.fingerprint.languages = req.body.languages;
-    if (req.body.availableRes) entry.fingerprint.availableRes = sanitizeString(req.body.availableRes, 40);
-    if (req.body.colorDepth) entry.fingerprint.colorDepth = sanitizeNumber(req.body.colorDepth, 0);
-    if (req.body.pixelRatio) entry.fingerprint.pixelRatio = sanitizeNumber(req.body.pixelRatio, 1);
-    if (req.body.downlink) entry.fingerprint.downlink = sanitizeNumber(req.body.downlink, 0);
-    if (req.body.rtt) entry.fingerprint.rtt = sanitizeNumber(req.body.rtt, 0);
+    if (req.body.fonts) entry.fingerprint.fonts = req.body.fonts;
+    if (req.body.permissions) entry.fingerprint.permissions = req.body.permissions;
+    if (req.body.mediaDevices) entry.fingerprint.mediaDevices = req.body.mediaDevices;
+    if (req.body.social) entry.fingerprint.social = req.body.social;
+    if (req.body.integrity) entry.fingerprint.integrity = req.body.integrity;
+    if (req.body.webgpu) entry.fingerprint.webgpu = req.body.webgpu;
   }
 
   await writeCaptures(captures);

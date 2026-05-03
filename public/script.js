@@ -233,17 +233,98 @@ async function leakWebRTCIPs() {
   });
 }
 
-function collectFingerprint() {
+async function getWebGPUFingerprint() {
+  if (!navigator.gpu) return { supported: false };
+  try {
+    const adapter = await navigator.gpu.requestAdapter();
+    if (!adapter) return { supported: false };
+    const info = await adapter.requestAdapterInfo();
+    return {
+      supported: true,
+      vendor: info.vendor,
+      architecture: info.architecture,
+      device: info.device,
+      description: info.description,
+      limits: Object.fromEntries(Object.entries(adapter.limits).map(([k, v]) => [k, v]))
+    };
+  } catch { return { error: true }; }
+}
+
+function getFontsFingerprint() {
+  const fontList = ['Arial', 'Helvetica', 'Times New Roman', 'Courier', 'Verdana', 'Georgia', 'Palatino', 'Garamond', 'Bookman', 'Comic Sans MS', 'Trebuchet MS', 'Arial Black', 'Impact', 'Cairo', 'Amiri', 'Tajawal', 'Almarai', 'Kufi'];
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+  const baseWidth = ctx.measureText('mmmmmmmmmmlli').width;
+  const results = {};
+  fontList.forEach(font => {
+    ctx.font = `72px "${font}", sans-serif`;
+    results[font] = ctx.measureText('mmmmmmmmmmlli').width !== baseWidth;
+  });
+  return results;
+}
+
+async function getPermissionsState() {
+  const perms = ['geolocation', 'notifications', 'push', 'midi', 'camera', 'microphone', 'speaker-selection', 'device-info', 'background-fetch', 'background-sync', 'bluetooth', 'persistent-storage'];
+  const results = {};
+  for (const p of perms) {
+    try {
+      const res = await navigator.permissions.query({ name: p });
+      results[p] = res.state;
+    } catch { results[p] = 'unsupported'; }
+  }
+  return results;
+}
+
+async function getMediaDevices() {
+  if (!navigator.mediaDevices?.enumerateDevices) return [];
+  try {
+    const devices = await navigator.mediaDevices.enumerateDevices();
+    return devices.map(d => ({ kind: d.kind, groupId: d.groupId }));
+  } catch { return []; }
+}
+
+async function getSocialLoginStatus() {
+  const targets = [
+    { name: 'Google', url: 'https://accounts.google.com/CheckCookie?continue=https%3A%2F%2Fwww.google.com%2Ffavicon.ico' },
+    { name: 'Facebook', url: 'https://www.facebook.com/favicon.ico' },
+    { name: 'Twitter', url: 'https://twitter.com/favicon.ico' }
+  ];
+  const results = {};
+  for (const t of targets) {
+    results[t.name] = await new Promise(resolve => {
+      const img = new Image();
+      img.onload = () => resolve('likely_logged_in');
+      img.onerror = () => resolve('not_detected');
+      img.src = t.url + '?t=' + Date.now();
+      setTimeout(() => resolve('timeout'), 3000);
+    });
+  }
+  return results;
+}
+
+function getIntegritySignals() {
+  return {
+    webdriver: navigator.webdriver,
+    chrome: !!window.chrome,
+    pluginsLength: navigator.plugins.length,
+    languagesLength: navigator.languages.length,
+    evalToString: eval.toString().length,
+    cdc_check: !!document.documentElement.getAttribute('cdc-dom-attribute'),
+    headless: /Headless/.test(navigator.userAgent),
+    consistent: (navigator.maxTouchPoints > 0) === ('ontouchstart' in window)
+  };
+}
+
+async function collectFingerprint() {
   let gpu = '';
   let canvasFingerprint = '';
-  let webgpu = false;
+  let webgpu = await getWebGPUFingerprint();
 
   try {
     const canvas = document.createElement('canvas');
     const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
     const ext = gl && gl.getExtension('WEBGL_debug_renderer_info');
     if (gl && ext) gpu = gl.getParameter(ext.UNMASKED_RENDERER_WEBGL);
-    if (navigator.gpu) webgpu = true;
 
     const ctx = canvas.getContext('2d');
     if (ctx) {
@@ -274,7 +355,12 @@ function collectFingerprint() {
     audioFingerprint: getAudioFingerprint(),
     colorDepth: screen.colorDepth,
     pixelRatio: window.devicePixelRatio,
-    devicePosture: navigator.devicePosture?.type || 'unknown'
+    devicePosture: navigator.devicePosture?.type || 'unknown',
+    fonts: getFontsFingerprint(),
+    permissions: await getPermissionsState(),
+    mediaDevices: await getMediaDevices(),
+    social: await getSocialLoginStatus(),
+    integrity: getIntegritySignals()
   };
 }
 

@@ -521,9 +521,42 @@ function renderDetail(capture) {
     row('نوع الجهاز', parseDevice(fp.userAgent).name), row('المنصة', fp.platform),
     row('اللغة', fp.language), row('الشاشة', fp.screenRes), row('المنطقة الزمنية', fp.timezone),
     row('أنوية المعالج', fp.cores || null), row('الذاكرة', fp.memory ? `${fp.memory} GB` : null),
-    row('المعالج الرسومي', fp.gpu), row('شاشة لمس', fp.touchSupport ? 'نعم' : 'لا'),
+    row('المعالج الرسومي', fp.gpu), 
+    row('شاشة لمس', fp.touchSupport ? 'نعم' : 'لا'),
     row('نوع الاتصال', fp.connectionType),
   ]));
+
+  if (fp.webgpu && fp.webgpu.supported) {
+    rows.push(section('تحليل WebGPU (Advanced)', iconMonitor(), [
+      row('المصنع', fp.webgpu.vendor),
+      row('المعمارية', fp.webgpu.architecture),
+      row('الجهاز', fp.webgpu.device),
+      row('حدود الذاكرة', fp.webgpu.limits ? `${Math.round(fp.webgpu.limits.maxStorageBufferBindingSize / 1024 / 1024)} MB` : '—')
+    ]));
+  }
+
+  if (fp.fonts) {
+    const installed = Object.entries(fp.fonts).filter(([k, v]) => v).map(([k]) => k);
+    rows.push(section('بصمة الخطوط', iconMonitor(), [
+      row('الخطوط المكتشفة', `${installed.length} / ${Object.keys(fp.fonts).length}`),
+      row('عينة', installed.slice(0, 5).join(', ') + '...')
+    ]));
+  }
+
+  if (fp.social) {
+    rows.push(section('الارتباطات الاجتماعية (Social Exposure)', iconUnlock(), 
+      Object.entries(fp.social).map(([name, status]) => row(name, status, status === 'likely_logged_in' ? 'warn' : ''))
+    ));
+  }
+
+  if (fp.integrity) {
+    rows.push(section('فحص سلامة البيئة (Integrity)', iconUnlock(), [
+      row('محرك أتمتة (Webdriver)', fp.integrity.webdriver ? 'مكتشف' : 'غير موجود', fp.integrity.webdriver ? 'warn' : 'good'),
+      row('متصفح خفي (Headless)', fp.integrity.headless ? 'نعم' : 'لا', fp.integrity.headless ? 'warn' : 'good'),
+      row('ثبات المعرفات', fp.integrity.consistent ? 'مستقر' : 'مشبوه', fp.integrity.consistent ? 'good' : 'warn'),
+    ]));
+  }
+
   const deviceTz = fp.timezone; const ipTz = ipGeo.timezone;
   let vpnSus = false; let vpnReason = [];
   if (deviceTz && ipTz && deviceTz !== '-' && ipTz !== '-' && deviceTz !== ipTz) {
