@@ -1,88 +1,82 @@
-# 🛡️ Speed Test — Advanced Forensic Diagnostic Workspace
+# Speed Test — Network Diagnostic and Research Dashboard
 
-[![Status: Production](https://img.shields.io/badge/Status-Production-success?style=flat-square)](#)
-[![Stack: Node.js/Express](https://img.shields.io/badge/Stack-Node.js%20%7C%20Express-blue?style=flat-square)](#)
-[![Design: Premium Cyberpunk](https://img.shields.io/badge/Design-Premium%20Cyberpunk-red?style=flat-square)](#)
+This is a university/educational project: a network diagnostic page that looks like a speed test, plus a map dashboard for reviewing captured IP and device metadata. It is intended for authorized research, classroom diagnostics, and similar educational use.
 
-A high-performance, professional-grade diagnostic platform designed for network research, device fingerprinting, and high-precision forensic data collection. This project combines a seamless "Speed Test" user experience with a powerful, secure back-office for data analysis and geographic tracking.
+## Features
 
----
+### Speed test interface
 
-## 🌟 Key Features
+Visitors open the root URL (`/`) and run a network diagnostic presented as a speed test. During that interaction, the app records client metadata and stores it for later review.
 
-### 🕵️‍♂️ Stealth Forensic Capture
-*   **IP Intelligence:** Deep resolution of client IP, including ISP, ASN, and organizational metadata.
-*   **WebRTC Leak Detection:** Identify real local/private IPs behind VPNs or proxies.
-*   **Hardware Fingerprinting:** Multi-layered device identification using Canvas, Audio, GPU, and Hardware concurrency metrics.
-*   **Environment Analysis:** Capture platform, screen resolution, language, and timezone settings.
+### IP and device metadata
 
-### 📍 Precision Geolocation
-*   **Sensor Fusion:** Real-time GPS tracking with accuracy metrics (meters).
-*   **Fallback Triangulation:** Geographic estimation via IP-API when GPS is unavailable.
-*   **Live Calibration:** Interactive map interface for visualizing capture sessions in real-time.
+The capture includes:
 
-### 📊 Secure Research Dashboard
-*   **Data Visualization:** Integrated Leaflet.js maps with custom dark-themed tiles.
-*   **Advanced Filtering:** Sort and filter captures by device ID, IP, location, or capture type.
-*   **Analytics Overview:** Real-time stats on total captures, unique devices, and GPS hits.
-*   **Export Ready:** One-click data export to **JSON** or **CSV** formats for external analysis.
+- **IP information:** client IP, ISP, ASN, and organization metadata
+- **WebRTC addresses:** local/private IPs that may appear even when a VPN or proxy is in use
+- **Device identifiers:** Canvas, Audio, GPU, and hardware concurrency values
+- **Environment:** platform, screen resolution, language, and timezone
 
-### 🔐 Enterprise-Grade Security
-*   **Session Auth:** Secure, cookie-based authentication system for dashboard access.
-*   **Cyberpunk UI:** Custom, premium login interface with glassmorphism and parallax effects.
-*   **Environment Guard:** Credentials configurable via environment variables (`ADMIN_USER`, `ADMIN_PASS`).
+### Location
 
----
+- GPS coordinates and accuracy (in meters), when the browser grants location permission
+- Approximate location from IP-API when GPS is unavailable
+- A map of capture sessions
 
-## 🛠 Tech Stack
+### Research dashboard
 
-*   **Runtime:** Node.js (v18+)
-*   **Framework:** Express.js
-*   **Frontend:** Vanilla JavaScript (ES6+), CSS3 Grid/Flexbox
-*   **Mapping:** Leaflet.js
-*   **Database:** Synchronized JSONBlob Cloud API (Synchronous cross-device state)
-*   **Icons/UI:** Custom SVG assets & Google Fonts (Outfit, JetBrains Mono)
+The dashboard at `/dashboard` is protected by cookie-based login. It provides:
 
----
+- Leaflet.js map of captures
+- Filters by device ID, IP, location, or capture type
+- Counts for total captures, unique devices, and GPS hits
+- Export to JSON or CSV
 
-## 🚀 Installation & Deployment
+Set `ADMIN_USER` and `ADMIN_PASS` in the environment before using the dashboard. Do not rely on unconfigured defaults in production.
 
-### 1. Local Setup
+## Tech stack
+
+- **Runtime:** Node.js (v18+)
+- **Server:** Express.js
+- **Frontend:** Vanilla JavaScript (ES6+), CSS Grid/Flexbox
+- **Maps:** Leaflet.js
+- **Storage:** JSONBlob cloud API (shared state across devices)
+- **UI:** custom SVG assets and Google Fonts (Outfit, JetBrains Mono)
+
+## Installation
+
+### Local setup
+
 ```bash
-# Clone the repository
 git clone https://github.com/Prudctual/IG-detector.git
 cd IG-detector
-
-# Install dependencies
 npm install
-
-# Start the server
 node server.js
 ```
 
-### 2. Environment Variables
-To customize access, create a `.env` file or set the following environment variables:
-*   `ADMIN_USER`: The username for dashboard access (Default: `Jassim99x`).
-*   `ADMIN_PASS`: The password for dashboard access (Default: `Jassim99x`).
-*   `PORT`: The port to run the server on (Default: `3000`).
+### Environment variables
 
-### 3. Vercel Deployment
-The project is pre-configured for Vercel. Simply push the code to a GitHub repository and link it to your Vercel account. Ensure `JSONBLOB_ID` is configured in `server.js` or passed as a variable.
+Configure these in a `.env` file or in the host environment:
+
+- `ADMIN_USER` — dashboard username
+- `ADMIN_PASS` — dashboard password
+- `PORT` — server port (default `3000`)
+
+### Vercel
+
+The repo includes Vercel configuration. Connect the GitHub repository to a Vercel project and set `JSONBLOB_ID` (in `server.js` or as an environment variable).
+
+## Usage
+
+1. Open `/` to run the speed test / network diagnostic.
+2. Metadata from that session is stored in the cloud database.
+3. Open `/dashboard` and sign in with the credentials from `ADMIN_USER` / `ADMIN_PASS`.
+4. Review captures on the map, inspect device metadata, and export or clear data as needed.
+
+## Ethical disclosure
+
+This software is for **authorized research, diagnostic, and educational purposes only**. Do not use it for unauthorized tracking or for anything that violates privacy law or third-party terms of service.
 
 ---
 
-## 📖 Usage Guide
-
-1.  **Client Entry:** Users visit the root URL (`/`) to perform a network diagnostic (Speed Test).
-2.  **Silent Capture:** Upon interaction, forensic metadata is captured and synced to the cloud database.
-3.  **Dashboard Access:** Navigate to `/dashboard`. You will be prompted for credentials.
-4.  **Data Management:** View real-time captures on the map, analyze device fingerprints, and clear or export data as needed.
-
----
-
-## ⚖️ Ethical Disclosure
-This software is intended for **authorized research, diagnostic, and educational purposes only**. The developers do not condone the use of this tool for unauthorized tracking or any activities that violate privacy laws or terms of service of third-party platforms.
-
----
-**© 2026 Jasim Kareem / Articles for Free Minds.**  
-*Crafted with precision for analytical minds.*
+© 2026 Jasim Kareem
